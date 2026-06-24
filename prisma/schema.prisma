@@ -1,0 +1,1029 @@
+// Prisma schema for KPPDF CRM v6
+// Источник: SCHEMA-CONSOLIDATED.md + правки A-G + OPEN-QUESTIONS-MASTER.md (применены 24.06.2026)
+// 32 сущности + 22 enum + Counter-таблица.
+// Soft-delete через isActive @default(true). Snapshot-поля на *Item-таблицах.
+
+generator client {
+  provider = "prisma-client-js"
+  // Без preview = стабильный клиент (Prisma 7)
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+  // ERRATA (v5): НЕ использовать драйвер-url — лучше PrismaPg driver adapter (см. src/lib/db.ts)
+}
+
+// =============================================================
+// ENUM-ы (22 штук)
+// =============================================================
+
+enum ProposalStatus {
+  DRAFT
+  SENT
+  ACCEPTED
+  REJECTED
+  PAID
+  CONVERTED // финальный (СПОР-11)
+}
+
+enum ContractStatus {
+  DRAFT
+  SENT
+  SIGNED
+  IN_PROGRESS
+  COMPLETED
+  ARCHIVED
+  TERMINATED // добавлено 24.06.2026 — для отмены после оплаты (Refund)
+}
+
+enum ProductionOrderStatus {
+  CREATED
+  PLANNING
+  AWAITING_MATERIALS
+  IN_PROGRESS
+  PARTIAL
+  COMPLETED
+  CANCELLED
+  ARCHIVED
+}
+
+enum ProductionTaskStatus {
+  CREATED
+  PLANNED
+  IN_WORK
+  PARTIAL
+  DONE
+  CANCELLED
+}
+
+enum StockMovementType {
+  IN
+  OUT
+  TRANSFER
+  WRITE_OFF
+}
+
+enum StockMovementReason {
+  PRODUCTION
+  PURCHASE
+  SALE
+  SALE_RETURN // v2
+  CLIENT_ORDER // R1: прямая отгрузка по КП без ЗК
+  WRITE_OFF
+  MANUAL
+}
+
+enum SupplierDeliveryStatus {
+  PLANNED
+  IN_TRANSIT
+  RECEIVED
+  PARTIALLY_RECEIVED
+  COMPLETED
+  CANCELLED
+}
+
+enum ShipmentStatus {
+  PLANNED
+  PACKED
+  SHIPPED
+  DELIVERED
+  PARTIAL
+  CANCELLED
+}
+
+enum WriteOffReason {
+  DEFECT
+  EXPIRY
+  LOSS
+  DAMAGE
+  INVENTORY_SHORTAGE
+  INVENTORY_SURPLUS
+  OTHER
+}
+
+enum WriteOffActStatus {
+  DRAFT
+  PENDING_APPROVAL
+  APPROVED
+  COMPLETED
+  CANCELLED
+}
+
+enum PurchaseOrderStatus {
+  DRAFT
+  SENT
+  CONFIRMED
+  IN_TRANSIT
+  RECEIVED
+  PARTIALLY_RECEIVED
+  CANCELLED
+  CLOSED
+}
+
+enum PurchaseRequestStatus {
+  PENDING
+  PROCESSED
+  CLOSED
+  CANCELLED
+}
+
+enum PurchaseRequestReason {
+  LOW_STOCK
+  MANUAL_REQUEST
+}
+
+enum OrderStatus {
+  DRAFT
+  IN_PROGRESS
+  AWAITING_PAYMENT
+  CLOSED
+  CANCELLED // добавлено 24.06.2026 (ЗК CANCELLED + Refund)
+}
+
+enum InvoiceStatus {
+  DRAFT
+  ISSUED
+  PARTIALLY_PAID
+  FULLY_PAID
+  OVERDUE
+}
+
+enum InvoiceType {
+  ADVANCE
+  MAIN
+  CORRECTIVE
+}
+
+enum PaymentMethod {
+  BANK_TRANSFER
+  CASH
+  CARD
+}
+
+enum PaymentType {
+  INCOMING // default; amount > 0
+  STORNO // компенсирующий корректирующий; amount < 0
+}
+
+enum UserRole {
+  ADMIN
+  DIRECTOR
+  ACCOUNTANT
+  MANAGER
+  PRODUCTION
+  PRODUCTION_MASTER
+  STOREKEEPER
+  VIEWER
+}
+
+enum OrganizationRole {
+  CONTRACTOR
+  CUSTOMER
+  SUPPLIER
+}
+
+enum ProductKind {
+  ITEM
+  SERVICE
+  WORK
+}
+
+enum ProductType {
+  PURCHASED
+  MANUFACTURED
+}
+
+// =============================================================
+// СПРАВОЧНИКИ (5)
+// =============================================================
+
+model User {
+  id            String    @id @default(uuid())
+  email         String    @unique
+  passwordHash  String
+  fullName      String
+  role          UserRole
+  isActive      Boolean   @default(true)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  // Обе стороны связи
+  createdProposals       Proposal[]       @relation("ProposalCreatedBy")
+  createdContracts       Contract[]       @relation("ContractCreatedBy")
+  createdProduction      ProductionOrder[] @relation("ProductionCreatedBy")
+  createdWriteOffs       WriteOffAct[]    @relation("WriteOffCreatedBy")
+  approvedWriteOffs      WriteOffAct[]    @relation("WriteOffApprovedBy")
+  createdPurchaseOrders  PurchaseOrder[]  @relation("PurchaseCreatedBy")
+  createdSupplierDeliveries SupplierDelivery[] @relation("SupplierDeliveryReceivedBy")
+  createdDrafts          DocumentTemplate[]
+  responsibleTasks       ProductionTask[]
+  responsibleShipments   Shipment[]
+  refunds                Refund[]
+  comments               Comment[]
+  purchaseRequests       PurchaseRequest[]
+
+  @@index([role])
+  @@map("users")
+}
+
+model Organization {
+  id            String    @id @default(uuid())
+  inn           String?   @unique
+  name          String
+  roles         OrganizationRole[] // multi-role: может быть CUSTOMER + SUPPLIER
+  isActive      Boolean   @default(true)
+  address       String?
+  notes         String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  // ROLES
+  isContractor  Boolean   @default(false)
+  isCustomer    Boolean   @default(false)
+  isSupplier    Boolean   @default(false)
+
+  signers       OrganizationSigner[]
+  contacts      OrganizationContact[]
+
+  // Как продавец (мы)
+  contractorProposals  Proposal[]       @relation("ContractorOrg")
+  contractorContracts  Contract[]       @relation("ContractorContract")
+  contractorProduction ProductionOrder[] @relation("ContractorProduction")
+
+  // Как клиент
+  customerProposals    Proposal[]       @relation("CustomerOrg")
+  customerContracts    Contract[]       @relation("CustomerContract")
+  customerProduction   ProductionOrder[] @relation("CustomerProduction")
+  customerShipments    Shipment[]
+
+  // Как поставщик
+  supplierDeliveries   SupplierDelivery[]
+  supplierOrders       PurchaseOrder[]
+
+  @@map("organizations")
+}
+
+model OrganizationSigner {
+  id             String   @id @default(uuid())
+  organizationId String
+  fullName       String
+  position       String
+  isActive       Boolean  @default(true)
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@map("organization_signers")
+}
+
+model OrganizationContact {
+  id             String   @id @default(uuid())
+  organizationId String
+  fullName       String
+  phone          String?
+  email          String?
+  position       String?
+  isActive       Boolean  @default(true)
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@map("organization_contacts")
+}
+
+model Product {
+  id          String      @id @default(uuid())
+  sku         String      @unique
+  name        String
+  unit        String      // ед. изм. (шт, кг, м²)
+  kind        ProductKind
+  productType ProductType
+  isActive    Boolean     @default(true)
+  notes       String?
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+
+  // Цены
+  costPrice   Decimal?    @db.Decimal(15, 2) // себестоимость (видна admin/director/accountant, v6 — менеджеру тоже, см. Q6 финансов C)
+  salePrice   Decimal?    @db.Decimal(15, 2)
+
+  proposalItems     ProposalItem[]
+  contractItems     ContractItem[]
+  productionTasks   ProductionTask[]
+  stockRecords      StockRecord[]
+  stockMovements    StockMovement[]
+  reservations      Reservation[]
+  purchaseRequests  PurchaseRequest[]
+  supplierDeliveryItems SupplierDeliveryItem[]
+  shipmentItems     ShipmentItem[]
+  writeOffItems     WriteOffItem[]
+  purchaseOrderItems PurchaseOrderItem[]
+
+  @@index([kind])
+  @@index([productType])
+  @@map("products")
+}
+
+model DocumentTemplate {
+  id          String   @id @default(uuid())
+  name        String
+  kind        String   // proposal | contract | invoice | ...
+  // blocks JSON — конструктор (GAP-004), v1 упрощён
+  blocks      Json?
+  isActive    Boolean  @default(true)
+  version     Int      @default(1)
+  createdById String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  createdBy   User     @relation(fields: [createdById], references: [id], onDelete: Restrict)
+  proposals   Proposal[]
+  contracts   Contract[]
+
+  @@index([kind])
+  @@map("document_templates")
+}
+
+model Workshop {
+  id        String   @id @default(uuid())
+  name      String
+  isActive  Boolean  @default(true)
+  tasks     ProductionTask[]
+
+  @@map("workshops")
+}
+
+model Warehouse {
+  id        String   @id @default(uuid())
+  code      String   @unique
+  name      String
+  address   String?
+  isActive  Boolean  @default(true)
+
+  stockRecords     StockRecord[]
+  stockMovements   StockMovement[]
+  supplierDeliveries SupplierDelivery[]
+  shipments        Shipment[]
+  writeOffs        WriteOffAct[]
+  purchaseOrders   PurchaseOrder[]
+
+  @@map("warehouses")
+}
+
+// =============================================================
+// КП + ДОГОВОР + ПРОИЗВОДСТВО
+// =============================================================
+
+model Proposal {
+  id                String   @id @default(uuid())
+  number            String   @unique // КП-XXXX
+  title             String
+  status            ProposalStatus @default(DRAFT)
+  customerId        String
+  contractorId      String
+  templateId        String?
+  parentProposalId  String?  // versioning (Q-CL-1)
+  version           Int      @default(1)
+  supersededAt      DateTime?
+
+  // Snapshot данных
+  designSnapshot    Json?    // design state для autosave (правка C)
+  vatRate           Decimal  @db.Decimal(5, 2) @default(20.00)
+  currency          String   @default("RUB") // жёстко RUB v1
+  paymentTermDays   Int?
+
+  packageTag        String?  // идентификатор сделки (СПОР-10) — для Картотеки
+  notes             String?
+  validUntil        DateTime?
+
+  isActive          Boolean  @default(true)
+  sentAt            DateTime?
+  acceptedAt        DateTime?
+  paidAt            DateTime? // когда менеджер нажал «Оплачено» (Q7)
+  convertedAt       DateTime?
+
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+  createdById       String
+
+  customer          Organization @relation("CustomerOrg",      fields: [customerId],       references: [id], onDelete: Restrict)
+  contractor        Organization @relation("ContractorOrg",    fields: [contractorId],     references: [id], onDelete: Restrict)
+  template          DocumentTemplate? @relation(fields: [templateId],      references: [id], onDelete: SetNull)
+  parentProposal    Proposal?  @relation("ProposalVersioning", fields: [parentProposalId], references: [id], onDelete: SetNull)
+  childProposals    Proposal[] @relation("ProposalVersioning")
+  createdBy         User         @relation("ProposalCreatedBy", fields: [createdById],     references: [id], onDelete: Restrict)
+
+  items             ProposalItem[]
+  contracts         Contract[]
+  productionOrders  ProductionOrder[]
+  reservations      Reservation[]
+  shipments         Shipment[]
+  comments          Comment[]
+
+  @@index([status])
+  @@index([customerId])
+  @@index([packageTag])
+  @@map("proposals")
+}
+
+model ProposalItem {
+  id                   String    @id @default(uuid())
+  proposalId           String
+  productId            String
+  quantity             Decimal   @db.Decimal(15, 3)
+  price                Decimal   @db.Decimal(15, 2)
+  /// Цена товара из справочника (Product.salePrice) на момент создания позиции — snapshot (правка A).
+  /// Не обновляется при изменении Product.salePrice — устойчивость КП от ретро-правок справочника.
+  productPriceSnapshot Decimal?  @db.Decimal(15, 2)
+  discountPercent      Decimal?  @db.Decimal(5, 2)
+  total                Decimal   @db.Decimal(15, 2)
+  notes                String?
+
+  // SNAPSHOT (НЕ обновляется при изменении Product)
+  productSku        String
+  productName       String
+  productUnit       String
+
+  sortOrder         Int      @default(0)
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  proposal          Proposal @relation(fields: [proposalId], references: [id], onDelete: Cascade)
+  product           Product  @relation(fields: [productId],  references: [id], onDelete: Restrict)
+
+  @@index([proposalId])
+  @@map("proposal_items")
+}
+
+model Contract {
+  id                String   @id @default(uuid())
+  number            String   @unique // Д-XXXX
+  title             String
+  status            ContractStatus @default(DRAFT)
+  parentProposalId  String   // NOT NULL — всегда от КП
+  parentContractId  String?  // versioning
+  version           Int      @default(1)
+  customerId        String
+  contractorId      String
+  templateId        String?
+
+  vatRate           Decimal  @db.Decimal(5, 2) @default(20.00)
+  currency          String   @default("RUB") // жёстко RUB
+  paymentTermDays   Int?
+
+  packageTag        String?
+  notes             String?
+  contractDate      DateTime @default(now())
+  validUntil        DateTime?
+
+  isActive          Boolean  @default(true)
+  signedByClientAt  DateTime?
+  signedByContractorAt DateTime?
+  completedAt       DateTime?
+
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+  createdById       String
+
+  parentProposal    Proposal @relation(fields: [parentProposalId], references: [id], onDelete: Restrict)
+  parentContract    Contract? @relation("ContractVersioning", fields: [parentContractId], references: [id], onDelete: SetNull)
+  childContracts    Contract[] @relation("ContractVersioning")
+  customer          Organization @relation("CustomerContract", fields: [customerId], references: [id], onDelete: Restrict)
+  contractor        Organization @relation("ContractorContract", fields: [contractorId], references: [id], onDelete: Restrict)
+  template          DocumentTemplate? @relation(fields: [templateId], references: [id], onDelete: SetNull)
+  createdBy         User     @relation("ContractCreatedBy", fields: [createdById], references: [id], onDelete: Restrict)
+
+  items             ContractItem[]
+  productionOrders  ProductionOrder[]
+  shipments         Shipment[]
+  comments          Comment[]
+  orders            Order[]
+
+  @@index([status])
+  @@index([customerId])
+  @@index([parentProposalId])
+  @@index([packageTag])
+  @@map("contracts")
+}
+
+model ContractItem {
+  id                String   @id @default(uuid())
+  contractId        String
+  productId         String
+  quantity          Decimal  @db.Decimal(15, 3)
+  priceWithoutVat   Decimal? @db.Decimal(15, 2) // NULL для рамочного
+  vatRate           Decimal  @db.Decimal(5, 2)
+  total             Decimal  @db.Decimal(15, 2)
+  lineDiscountPercent Decimal? @db.Decimal(5, 2)
+  notes             String?
+
+  // SNAPSHOT
+  productSku        String
+  productName       String
+  productUnit       String
+
+  sortOrder         Int      @default(0)
+  createdAt         DateTime @default(now())
+
+  contract          Contract @relation(fields: [contractId], references: [id], onDelete: Cascade)
+  product           Product  @relation(fields: [productId],  references: [id], onDelete: Restrict)
+
+  @@index([contractId])
+  @@map("contract_items")
+}
+
+model ProductionOrder {
+  id                String   @id @default(uuid())
+  number            String   @unique // ЗК-XXXX
+  status            ProductionOrderStatus @default(CREATED)
+  parentProposalId  String   // NOT NULL — строгий FK!
+  parentContractId  String?  // nullable
+  customerId        String
+  contractorId      String
+
+  plannedStartDate  DateTime?
+  plannedEndDate    DateTime?
+  actualStartDate   DateTime?
+  actualEndDate     DateTime?
+
+  packageTag        String?
+  notes             String?
+  cancelReason      String?
+
+  isActive          Boolean  @default(true)
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+  createdById       String
+
+  parentProposal    Proposal @relation(fields: [parentProposalId], references: [id], onDelete: Restrict)
+  parentContract    Contract? @relation(fields: [parentContractId], references: [id], onDelete: SetNull)
+  customer          Organization @relation("CustomerProduction",   fields: [customerId],   references: [id], onDelete: Restrict)
+  contractor        Organization @relation("ContractorProduction", fields: [contractorId], references: [id], onDelete: Restrict)
+  createdBy         User     @relation("ProductionCreatedBy",    fields: [createdById], references: [id], onDelete: Restrict)
+
+  items             ProductionTask[]
+  stockMovements    StockMovement[]
+  shipments         Shipment[]
+  refunds           Refund[]
+  comments          Comment[]
+
+  @@index([status])
+  @@index([parentProposalId])
+  @@map("production_orders")
+}
+
+model ProductionTask {
+  id                 String   @id @default(uuid())
+  productionOrderId  String
+  productId          String?  // NULL для INSTALLATION/SERVICE/WORK
+  workshopId         String?
+  responsibleUserId  String?
+
+  quantityPlanned    Decimal  @db.Decimal(15, 3)
+  quantityActual     Decimal? @db.Decimal(15, 3)
+
+  status             ProductionTaskStatus @default(CREATED)
+  startedAt          DateTime?
+  finishedAt         DateTime?
+  notes              String?
+
+  // SNAPSHOT
+  productSku         String?
+  productName        String?
+  productUnit        String?
+
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+
+  productionOrder    ProductionOrder @relation(fields: [productionOrderId], references: [id], onDelete: Cascade)
+  product            Product?  @relation(fields: [productId], references: [id], onDelete: Restrict)
+  workshop           Workshop? @relation(fields: [workshopId], references: [id], onDelete: SetNull)
+  responsibleUser    User?     @relation(fields: [responsibleUserId], references: [id], onDelete: SetNull)
+
+  @@index([productionOrderId])
+  @@map("production_tasks")
+}
+
+// =============================================================
+// СКЛАД: 11 сущностей
+// =============================================================
+
+model StockRecord {
+  id              String   @id @default(uuid())
+  warehouseId     String
+  productId       String
+  quantity        Decimal  @db.Decimal(15, 3) @default(0)
+  reservedQuantity Decimal @db.Decimal(15, 3) @default(0)
+  lastMovementAt  DateTime?
+  updatedAt       DateTime @updatedAt
+
+  warehouse       Warehouse @relation(fields: [warehouseId], references: [id], onDelete: Restrict)
+  product         Product   @relation(fields: [productId],   references: [id], onDelete: Restrict)
+
+  // Уникальность (warehouse, product)
+  @@unique([warehouseId, productId])
+  @@index([productId])
+  @@map("stock_records")
+}
+
+model StockMovement {
+  id                       String   @id @default(uuid())
+  warehouseId              String
+  productId                String
+  type                     StockMovementType
+  reason                   StockMovementReason?
+  quantity                 Decimal  @db.Decimal(15, 3)
+  notes                    String?
+
+  // источники (nullable)
+  sourceProductionOrderId  String?
+  sourceProposalId         String?
+  sourceSupplierDeliveryId String?
+  sourceShipmentId         String?
+  sourceWriteOffActId      String?
+  transferFromWarehouseId  String?
+
+  costOfGoodsSold          Decimal? @db.Decimal(15, 2) // для Finance (после SALE)
+  createdAt                DateTime @default(now())
+  createdById              String
+
+  warehouse                Warehouse @relation(fields: [warehouseId], references: [id], onDelete: Restrict)
+  product                  Product   @relation(fields: [productId],   references: [id], onDelete: Restrict)
+  sourceProductionOrder    ProductionOrder? @relation(fields: [sourceProductionOrderId], references: [id], onDelete: SetNull)
+  sourceProposal           Proposal?       @relation(fields: [sourceProposalId],         references: [id], onDelete: SetNull)
+
+  @@index([type])
+  @@index([productId])
+  @@index([sourceProductionOrderId])
+  @@map("stock_movements")
+}
+
+model Reservation {
+  id            String   @id @default(uuid())
+  proposalId    String
+  productId     String
+  quantity      Decimal  @db.Decimal(15, 3)
+  expiresAt     DateTime?
+  createdAt     DateTime @default(now())
+
+  proposal      Proposal @relation(fields: [proposalId], references: [id], onDelete: Cascade)
+  product       Product  @relation(fields: [productId],  references: [id], onDelete: Restrict)
+
+  @@index([proposalId])
+  @@index([productId])
+  @@map("reservations")
+}
+
+model PurchaseRequest {
+  id           String   @id @default(uuid())
+  productId    String
+  quantity     Decimal  @db.Decimal(15, 3)
+  status       PurchaseRequestStatus @default(PENDING)
+  reason       PurchaseRequestReason?
+  notes        String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  createdById  String
+
+  product      Product  @relation(fields: [productId], references: [id], onDelete: Restrict)
+  createdBy    User     @relation(fields: [createdById], references: [id], onDelete: Restrict)
+
+  @@index([status])
+  @@map("purchase_requests")
+}
+
+model SupplierDelivery {
+  id                       String   @id @default(uuid())
+  number                   String   @unique // СД-XXXX
+  status                   SupplierDeliveryStatus @default(PLANNED)
+  supplierId               String
+  warehouseId              String
+  parentContractId         String?
+  supplierPurchaseOrderId  String?
+  expectedDate             DateTime?
+  receivedDate             DateTime?
+  notes                    String?
+
+  isActive                 Boolean  @default(true)
+  createdAt                DateTime @default(now())
+  updatedAt                DateTime @updatedAt
+  receivedById             String?
+
+  supplier                 Organization @relation(fields: [supplierId], references: [id], onDelete: Restrict)
+  warehouse                Warehouse    @relation(fields: [warehouseId], references: [id], onDelete: Restrict)
+  receivedBy               User?        @relation("SupplierDeliveryReceivedBy", fields: [receivedById], references: [id], onDelete: SetNull)
+
+  items                    SupplierDeliveryItem[]
+
+  @@index([status])
+  @@index([supplierId])
+  @@map("supplier_deliveries")
+}
+
+model SupplierDeliveryItem {
+  id                  String   @id @default(uuid())
+  supplierDeliveryId  String
+  productId           String
+  quantityPlanned     Decimal  @db.Decimal(15, 3)
+  quantityReceived    Decimal  @db.Decimal(15, 3) @default(0)
+  costWithoutVat      Decimal  @db.Decimal(15, 2)
+  vatRate             Decimal  @db.Decimal(5, 2) @default(20.00)
+  notes               String?
+
+  supplierDelivery    SupplierDelivery @relation(fields: [supplierDeliveryId], references: [id], onDelete: Cascade)
+  product             Product @relation(fields: [productId], references: [id], onDelete: Restrict)
+
+  @@index([supplierDeliveryId])
+  @@map("supplier_delivery_items")
+}
+
+model Shipment {
+  id                 String   @id @default(uuid())
+  number             String   @unique // ОТК-XXXX
+  status             ShipmentStatus @default(PLANNED)
+  warehouseId        String
+  productionOrderId  String?
+  proposalId         String?  // R1: прямая КП-отгрузка
+  contractId         String?
+  customerId         String
+  responsibleUserId  String?
+  shippedAt          DateTime?
+  deliveredAt        DateTime?
+  notes              String?
+
+  isActive           Boolean  @default(true)
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+
+  warehouse          Warehouse  @relation(fields: [warehouseId], references: [id], onDelete: Restrict)
+  productionOrder    ProductionOrder? @relation(fields: [productionOrderId], references: [id], onDelete: SetNull)
+  proposal           Proposal?       @relation(fields: [proposalId],         references: [id], onDelete: SetNull)
+  contract           Contract?       @relation(fields: [contractId],         references: [id], onDelete: SetNull)
+  customer           Organization    @relation(fields: [customerId],         references: [id], onDelete: Restrict)
+  responsibleUser    User?           @relation(fields: [responsibleUserId], references: [id], onDelete: SetNull)
+
+  items              ShipmentItem[]
+  refunds            Refund[]
+
+  @@index([status])
+  @@index([customerId])
+  @@map("shipments")
+}
+
+model ShipmentItem {
+  id              String   @id @default(uuid())
+  shipmentId      String
+  productId       String
+  quantityPlanned Decimal  @db.Decimal(15, 3)
+  quantityActual  Decimal  @db.Decimal(15, 3)
+  costOfGoodsSold Decimal? @db.Decimal(15, 2)
+  notes           String?
+
+  shipment        Shipment @relation(fields: [shipmentId], references: [id], onDelete: Cascade)
+  product         Product  @relation(fields: [productId],  references: [id], onDelete: Restrict)
+
+  @@index([shipmentId])
+  @@map("shipment_items")
+}
+
+model WriteOffAct {
+  id            String   @id @default(uuid())
+  number        String   @unique // АС-XXXX
+  status        WriteOffActStatus @default(DRAFT)
+  warehouseId   String
+  reason        WriteOffReason
+  notes         String?
+  approvedAt    DateTime?
+  completedAt   DateTime?
+
+  isActive      Boolean  @default(true)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  createdById   String
+  approvedById  String?
+
+  warehouse     Warehouse @relation(fields: [warehouseId], references: [id], onDelete: Restrict)
+  createdBy     User      @relation("WriteOffCreatedBy",   fields: [createdById],  references: [id], onDelete: Restrict)
+  approvedBy    User?     @relation("WriteOffApprovedBy",  fields: [approvedById], references: [id], onDelete: SetNull)
+
+  items         WriteOffItem[]
+  refunds       Refund[]
+
+  @@index([status])
+  @@map("write_off_acts")
+}
+
+model WriteOffItem {
+  id            String   @id @default(uuid())
+  writeOffActId String
+  productId     String
+  quantity      Decimal  @db.Decimal(15, 3)
+  costOfGoodsSold Decimal? @db.Decimal(15, 2)
+  notes         String?
+
+  writeOffAct   WriteOffAct @relation(fields: [writeOffActId], references: [id], onDelete: Cascade)
+  product       Product     @relation(fields: [productId],     references: [id], onDelete: Restrict)
+
+  @@index([writeOffActId])
+  @@map("write_off_items")
+}
+
+model PurchaseOrder {
+  id                  String   @id @default(uuid())
+  number              String   @unique // ЗП-XXXX
+  status              PurchaseOrderStatus @default(DRAFT)
+  supplierId          String
+  warehouseId         String
+  parentContractId    String?
+  purchaseRequestId   String?
+  expectedDate        DateTime?
+  receivedDate        DateTime?
+  notes               String?
+
+  isActive            Boolean  @default(true)
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+  createdById         String
+
+  supplier            Organization @relation(fields: [supplierId], references: [id], onDelete: Restrict)
+  warehouse           Warehouse    @relation(fields: [warehouseId], references: [id], onDelete: Restrict)
+  createdBy           User         @relation("PurchaseCreatedBy", fields: [createdById], references: [id], onDelete: Restrict)
+
+  items               PurchaseOrderItem[]
+
+  @@index([status])
+  @@map("purchase_orders")
+}
+
+model PurchaseOrderItem {
+  id              String   @id @default(uuid())
+  purchaseOrderId String
+  productId       String
+  quantity        Decimal  @db.Decimal(15, 3)
+  costWithoutVat  Decimal  @db.Decimal(15, 2)
+  vatRate         Decimal  @db.Decimal(5, 2) @default(20.00)
+  notes           String?
+
+  purchaseOrder   PurchaseOrder @relation(fields: [purchaseOrderId], references: [id], onDelete: Cascade)
+  product         Product       @relation(fields: [productId],       references: [id], onDelete: Restrict)
+
+  @@index([purchaseOrderId])
+  @@map("purchase_order_items")
+}
+
+// =============================================================
+// ФИНАНСЫ: Order / Invoice / Payment / Refund
+// =============================================================
+
+model Order {
+  id              String   @id @default(uuid())
+  number          String   @unique // Order-XXXX
+  status          OrderStatus @default(DRAFT)
+  proposalId      String
+  contractId      String
+  customerId      String
+  contractorId    String
+  totalAmount     Decimal  @db.Decimal(15, 2)
+  paidAmount      Decimal  @db.Decimal(15, 2) @default(0)
+  balance         Decimal  @db.Decimal(15, 2) // инвариант: >= 0
+  margin          Decimal? @db.Decimal(15, 2)
+  currency        String   @default("RUB")
+  closedAt        DateTime?
+  cancelReason    String?
+  notes           String?
+
+  isActive        Boolean  @default(true)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  createdById     String
+
+  contract        Contract @relation(fields: [contractId], references: [id], onDelete: Restrict)
+
+  invoices        Invoice[]
+  payments        Payment[]
+  refunds         Refund[]
+  comments        Comment[]
+
+  @@index([status])
+  @@index([contractId])
+  @@index([customerId])
+  @@map("orders")
+}
+
+model Invoice {
+  id            String      @id @default(uuid())
+  number        String      @unique // Inv-XXXX
+  orderId       String
+  invoiceType   InvoiceType
+  status        InvoiceStatus @default(DRAFT)
+  amount        Decimal     @db.Decimal(15, 2)
+  paidAmount    Decimal     @db.Decimal(15, 2) @default(0)
+  balance       Decimal     @db.Decimal(15, 2) // инвариант: >= 0
+  issuedAt      DateTime?
+  dueDate       DateTime?
+  notes         String?
+
+  vatRate       Decimal     @db.Decimal(5, 2) @default(20.00)
+  isActive      Boolean     @default(true)
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+  createdById   String
+
+  order         Order       @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  payments      Payment[]
+
+  @@index([orderId])
+  @@index([status])
+  @@map("invoices")
+}
+
+model Payment {
+  id                String      @id @default(uuid())
+  number            String      @unique // Pay-XXXX
+  type              PaymentType @default(INCOMING)
+  method            PaymentMethod
+  orderId           String
+  invoiceId         String?     // nullable — «в кучу» Order
+  correctsPaymentId String?     // для STORNO: ссылка на исходный ошибочный
+  amount            Decimal     @db.Decimal(15, 2) // > 0 для INCOMING, < 0 для STORNO
+  receivedAt        DateTime    @default(now())
+  registeredAt      DateTime    @default(now()) // когда бухгалтер внёс
+  notes             String?
+  isActive          Boolean     @default(true)
+  createdAt         DateTime    @default(now())
+  createdById       String
+
+  order             Order    @relation(fields: [orderId], references: [id], onDelete: Restrict)
+  invoice           Invoice? @relation(fields: [invoiceId], references: [id], onDelete: SetNull)
+
+  refunds           Refund[] // Refund ссылается на исходный Payment
+
+  @@index([orderId])
+  @@index([type])
+  @@map("payments")
+}
+
+model Refund {
+  id                    String   @id @default(uuid())
+  number                String   @unique // Ref-XXXX
+  orderId               String
+  originalPaymentId     String   // NOT NULL
+  linkedProductionOrderId String?
+  linkedShipmentId      String?
+  linkedWriteOffId      String?
+  amount                Decimal  @db.Decimal(15, 2) // > 0 (положительная; вычитается математически)
+  reason                String   // >= 3 символа
+  processedAt           DateTime?
+  registeredAt          DateTime @default(now())
+  createdById           String
+
+  order                 Order             @relation(fields: [orderId],               references: [id], onDelete: Restrict)
+  originalPayment       Payment           @relation(fields: [originalPaymentId],     references: [id], onDelete: Restrict)
+  linkedProduction      ProductionOrder?  @relation(fields: [linkedProductionOrderId], references: [id], onDelete: SetNull)
+  linkedShipment        Shipment?         @relation(fields: [linkedShipmentId],       references: [id], onDelete: SetNull)
+  linkedWriteOff        WriteOffAct?      @relation(fields: [linkedWriteOffId],       references: [id], onDelete: SetNull)
+  createdBy             User              @relation(fields: [createdById],            references: [id], onDelete: Restrict)
+
+  @@index([orderId])
+  @@index([originalPaymentId])
+  @@map("refunds")
+}
+
+// =============================================================
+// Counter (safe-increment для нумерации)
+// =============================================================
+
+model Counter {
+  id    String @id  // 'proposal', 'contract', 'production', 'order', 'invoice', 'payment', 'supplier_delivery', 'shipment', 'write_off', 'purchase_order', 'comment'
+  year  Int?    // null = сквозной; year = ежегодный
+  value BigInt  @default(0)
+
+  @@unique([id, year])
+  @@map("counters")
+}
+
+// =============================================================
+// История комментариев (правка F)
+// =============================================================
+
+model Comment {
+  id              String   @id // client-provided: ULID/UUID для снижения race conditions
+  packageTag      String   // polymorphic FK по packageTag (СПОР-10)
+  authorId        String
+  text            String
+  isArchived      Boolean  @default(false)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  // Опциональные явные FK (для аналитики и JOIN)
+  proposalId      String?
+  contractId      String?
+  productionOrderId String?
+  orderId         String?
+
+  author          User      @relation(fields: [authorId], references: [id], onDelete: Restrict)
+  proposal        Proposal?   @relation(fields: [proposalId],      references: [id], onDelete: Cascade)
+  contract        Contract?   @relation(fields: [contractId],      references: [id], onDelete: Cascade)
+  productionOrder ProductionOrder? @relation(fields: [productionOrderId], references: [id], onDelete: Cascade)
+
+  @@index([packageTag])
+  @@index([authorId])
+  @@map("comments")
+}
