@@ -1,190 +1,133 @@
-# KPPDF CRM v6 — Phase 1 Bootstrap
+# KPPDF CRM v6 — Теоретическая база знаний
 
-> Минимально-рабочий «Каркас-Kit» для 6 модулей (КП / Договор / Производство / Склад / Финансы / Картотека сделок).
-> Bootstrap — это фундамент: схема БД, auth, RBAC, infra. Бизнес-CRUD по модулям — Phase 2.
+> **Версия:** v6 (реорганизовано 24.06.2026). Весь код удалён — это **чисто теоретическая документация** для обсуждения дизайна и бизнес-логики с AI-ассистентами и экспертами.
+>
+> **Главный входной файл:** [`BIG-BOOK.md`](./BIG-BOOK.md) — консолидированная справка по всему проекту (если нужно быстро понять что и как).
+>
+> **Назначение базы:** зафиксировать архитектуру CRM (КП → Договор → ЗК → Склад → Финансы) перед началом кодинга. Все **38 открытых вопросов** согласованы (24.06.2026), Phase 1 Bootstrap миграций Prisma разблокирован.
 
-## Стек (согласован 24.06.2026)
+---
 
-| Слой | Технология | Версия |
-|---|---|---|
-| Frontend | Next.js (App Router) | 16.2.9 |
-| UI library | Mantine | 7.x |
-| Type system | TypeScript strict | 5.x |
-| Server state | TanStack Query | 5.x |
-| Forms | react-hook-form + Zod 4 | latest |
-| ORM | Prisma + PrismaPg driver adapter | 7.8+ |
-| DB | PostgreSQL | 16+ |
-| Auth | JWT cookies (jose) | HS256 + HttpOnly |
-| Image | sharp | latest |
-| Tests | Vitest 4 + Playwright | latest |
-| Containerization | Docker Compose (postgres + app + nginx) | latest |
-| Package manager | pnpm | 9.x |
-
-## Структура проекта
+## 📂 Структура проекта
 
 ```
-kppdf-6.0/
-├── prisma/
-│   ├── schema.prisma          # 32 сущности + 22 enum + Counter (по SCHEMA-CONSOLIDATED.md)
-│   └── seed.ts                # Идемпотентный seed: 11 счётчиков + admin user
-├── src/
-│   ├── lib/
-│   │   ├── env.ts             # Zod-валидация env (DATABASE_URL, JWT_SECRET ≥ 32)
-│   │   ├── db.ts              # Prisma 7 client + PrismaPg driver adapter
-│   │   ├── jwt.ts             # jose JWT (HS256) + HttpOnly cookie helpers
-│   │   ├── rbac.ts            # requireAuth/requireRole/requireAuthAndRole/requireAuthOnly
-│   │   ├── counter.ts         # Safe-increment через $transaction + SELECT FOR UPDATE
-│   │   ├── theme.ts           # Mantine theme (locale ru + russian spacing)
-│   │   └── validations/
-│   │       └── auth.schema.ts # loginSchema + proposalCreateSchema
-│   ├── app/
-│   │   ├── layout.tsx         # Root layout: MantineProvider + QueryClient + Notifications
-│   │   ├── page.tsx           # Redirect: /login или /dashboard
-│   │   └── api/
-│   │       ├── health/route.ts        # GET /api/health (smoke probe)
-│   │       ├── auth/login/route.ts    # POST /api/auth/login (bcrypt + set-cookie)
-│   │       ├── auth/logout/route.ts   # POST /api/auth/logout (clear cookie)
-│   │       └── proposals/route.ts     # GET /api/proposals (RBAC-protected)
-│   └── components/
-│       └── karkas-kit/
-│           └── KarkasLayout.tsx       # 3-зонный AppShell (Navbar/Main/Aside)
-├── tests/                     # тесты v2 polish (Vitest)
-├── docker-compose.example.yml # postgres + app + nginx
-├── Dockerfile                 # multi-stage для Next.js 16 standalone
-├── next.config.ts             # standalone output + serverActions 5mb
-├── tsconfig.json              # strict + paths @/* + noUncheckedIndexedAccess
-├── package.json               # все зависимости стека
-└── .env.example               # DATABASE_URL, JWT_SECRET, NODE_ENV, SEED_ADMIN_*
-
+D:\kppdf-6.0\
+│
+├── 📄 BIG-BOOK.md                       ← ГЛАВНЫЙ КОНСОЛИДАТОР (начни читать здесь)
+├── 📄 README.md                         ← ВЫ ЗДЕСЬ (навигация)
+│
+├── 📁 01_КП\
+│   └── 📄 МОДУЛЬ-КОММЕРЧЕСКОЕ-ПРЕДЛОЖЕНИЕ.md   (~945 строк, 14 разделов)
+│
+├── 📁 02_Договор\
+│   └── 📄 МОДУЛЬ-ДОГОВОР.md            (~402 строки, 11 разделов)
+│
+├── 📁 03_Производство\
+│   └── 📄 МОДУЛЬ-ПРОИЗВОДСТВО.md        (~405 строк, 11 разделов)
+│
+├── 📁 04_Склад\
+│   ├── 📄 МОДУЛЬ-СКЛАД.md              ← входная точка, обзорный каркас (~400 строк)
+│   ├── 📄 МОДУЛЬ-СКЛАД-ПОДРОБНЫЙ.md    (~791 строка, схемы 4 сущностей + RBAC)
+│   └── 📄 МОДУЛЬ-СКЛАД-UI.md           (~725 строк, UI 5 страниц на «Каркас-Kit»)
+│
+├── 📁 05_Финансы\
+│   └── 📄 МОДУЛЬ-ФИНАНСЫ.md            (~405 строк, 11 разделов)
+│
+└── 📁 99_Справочники\                  ← сквозные справочники и решения
+    ├── 📄 SCHEMA-CONSOLIDATED.md        — единая схема БД (32 сущности + 22 enum)
+    ├── 📄 RBAC-MATRIX.md                ← сводная матрица прав по всем модулям
+    ├── 📄 GLOSSARY-MASTER.md            ← единый словарь терминов проекта
+    ├── 📄 FLOW-MAP.md                   ← визуальная карта потоков КП → Деньги
+    ├── 📄 STACK-PRESCRIPTION.md (СТЕК-ПРЕДПИСАНИЕ) — технологический стек v6
+    ├── 📄 USER-JOURNEYS.md              — реальные пользовательские сценарии
+    ├── 📄 MASTER-AUDIT-V6.md (МАСТЕР-АУДИТ-V6) — финальный аудит документации
+    ├── 📄 OPEN-QUESTIONS-MASTER.md      — все 38 Q-вопросов и их решения
+    ├── 📄 СПОРНЫЕ-МОМЕНТЫ.md            — 15 СПОР-ов и их резолюции
+    ├── 📄 ЖУРНАЛ-ПРОГОНА.md             — прогон 73 V-пунктов + 26 gap-карточек
+    ├── 📄 ВЕРИФИКАЦИЯ-ЧЕКЛИСТ.md         — 73 проверочных пункта по 5 осям
+    ├── 📄 ОТКРЫТЫЕ-ВОПРОСЫ.md           — 15 вопросов Q1-Q15 по КП
+    └── 📄 TOOLS-FOR-THEORY-TESTING.md   — инструменты для проверки теории
 ```
 
-## Phase 1 Bootstrap — запуск с нуля
+---
 
-### 1. Установить зависимости
+## 🚀 Быстрый старт: от простого к сложному
 
-```bash
-pnpm install   # или npm install (если нет pnpm)
-```
+### Если вы **новичок в проекте** или **ИИ-агент, который только подключился**:
 
-### 2. Скопировать .env и заполнить
+1. Читайте **[`BIG-BOOK.md`](./BIG-BOOK.md)** — главный консолидатор. Даст 80% понимания сразу.
 
-```bash
-cp .env.example .env
-# Сгенерировать JWT_SECRET минимум 32 символа:
-openssl rand -base64 48
-```
+### Если вы **разработчик и хотите писать код**:
 
-### 3. Поднять Postgres (docker compose ИЛИ локальный)
+1. Начните с **[`BIG-BOOK.md`](./BIG-BOOK.md)** — общая картина.
+2. Перейдите к **[`99_Справочники/SCHEMA-CONSOLIDATED.md`](99_Справочники/SCHEMA-CONSOLIDATED.md)** — схема БД (32 сущности).
+3. Откройте конкретный МОДУЛЬ в папке `0X_Модуль\` — детальный каркас.
 
-```bash
-docker compose up -d postgres
-# ИЛИ если уже есть локальный Postgres (на Synology DSM):
-# — создать базу kppdf_v6 вручную, обновить DATABASE_URL в .env
-```
+### Если вы **продакт-оунере и проверяете бизнес-логику**:
 
-### 4. Применить миграции (создать таблицы)
+1. Начните с **[`99_Справочники/OPEN-QUESTIONS-MASTER.md`](99_Справочники/OPEN-QUESTIONS-MASTER.md)** — все 38 решений согласованы.
+2. Перейдите к соответствующему **МОДУЛЬ-документу** и ищите «✅ РЕШЕНО» маркеры near §8/§10/§13.
+3. Для критичных согласований — **[`99_Справочники/MASTER-AUDIT-V6.md`](99_Справочники/МАСТЕР-АУДИТ-V6.md)** имеет раздел 6 «Бизнес-логика — общая проверка связности цепочки».
 
-```bash
-pnpm prisma migrate dev --name init
-pnpm prisma generate
-```
+### Если вы **ИИ-агент, который помогает писать код модуля**:
 
-### 5. Сид: 11 счётчиков + admin user
+1. Откройте **[`BIG-BOOK.md`](./BIG-BOOK.md)** — общая картина + ссылки на детальные доки.
+2. Откройте конкретный МОДУЛЬ-документ.
+3. Для каждого решения проверяйте **[`99_Справочники/OPEN-QUESTIONS-MASTER.md`](99_Справочники/OPEN-QUESTIONS-MASTER.md)** — там формальные ✅ ПРИНЯТО маркеры.
 
-```bash
-pnpm db:seed
-```
+---
 
-### 6. Запустить dev-сервер
+## 🔑 Ключевые архитектурные решения v6 (обязательно знать)
 
-```bash
-pnpm dev
-# → http://localhost:3000
-```
+| Решение | Где описано |
+|---|---|
+| **Конвертация КП «Оплачено» → Договор КАТЕГОРИЧЕСКИ ЗАПРЕЩЕНА** | `02_Договор/МОДУЛЬ-ДОГОВОР.md` §5.1 правило 2 |
+| **Storno ≠ Refund** (2 разные сущности) | `05_Финансы/МОДУЛЬ-ФИНАНСЫ.md` §6 |
+| **Приход от ЗК только для `Product.kind='ITEM'`** | `04_Склад/МОДУЛЬ-СКЛАД-ПОДРОБНЫЙ.md` §3 правило 6 |
+| **Отдельные счётчики для каждого типа документа** (КП-XXXX, Д-XXXX, ЗК-XXXX, СД-XXXX, ОТК-XXXX, АС-XXXX, ЗП-XXXX, Inv-XXXX, Pay-XXXX, Ref-XXXX) | `99_Справочники/SCHEMA-CONSOLIDATED.md` §4 |
+| **Snapshot-поля на всех `*Item`** (нельзя ретро-правки в справочниках сломать историю) | `99_Справочники/SCHEMA-CONSOLIDATED.md` §0 принцип 3 |
+| **Currency = RUB жёстко в v1** (multi-currency v2) | `99_Справочники/SCHEMA-CONSOLIDATED.md` §3.4 |
+| **`packageTag`** — ручной тег сделки, **виртуальная Картотека** через SQL UNION | `01_КП/МОДУЛЬ-КОММЕРЧЕСКОЕ-ПРЕДЛОЖЕНИЕ.md` §0 |
 
-### 7. Проверить работоспособность
+---
 
-```bash
-curl http://localhost:3000/api/health
-# → {"status":"ok","db":"reachable",...}
-```
+## 📊 Статус документации (на 24.06.2026)
 
-## Production build (для Synology DSM)
+| Метрика | Значение |
+|---|---|
+| Всего документов (теоретических) | **19** .md файлов |
+| Готовность к кодированию | **100%** ✅ Phase 1 Bootstrap миграций Prisma разблокирован |
+| Открытых Q-вопросов | **0** ✅ (все 38 согласованы) |
+| Противоречий внутри документов | **0** ✅ (все 6 закрыты) |
+| Сущностей в БД (схема) | **32** сущности + 22 enum |
+| Ролей в системе | **7** ролей (admin, director, manager, accountant, production, storekeeper, viewer) |
 
-### Docker Compose
+---
 
-```bash
-cp docker-compose.example.yml docker-compose.yml
-# заполнить POSTGRES_PASSWORD и JWT_SECRET в .env
-docker compose up -d --build
-```
+## 🔗 Согласованные стыки между модулями
 
-### Локальные скрипты + rsync (рекомендовано для v1)
+См. раздел **«Связь со Складом»** в каждом МОДУЛЬ-доке:
+- `01_КП/МОДУЛЬ-КОММЕРЧЕСКОЕ-ПРЕДЛОЖЕНИЕ.md` §13 — глоссарий ключевых терминов v6
+- `02_Договор/МОДУЛЬ-ДОГОВОР.md` §11 — триггер Order = подписание Договора
+- `03_Производство/МОДУЛЬ-ПРОИЗВОДСТВО.md` §6.3 — связь с Складом (StockMovement)
+- `04_Склад/МОДУЛЬ-САЛД.md` — полная схема всех 4 сущностей
+- `05_Финансы/МОДУЛЬ-ФИНАНСЫ.md` §4 — OrderClosing зависит от Shipment.delivered
 
-```bash
-pnpm build
-# rsync .next/standalone + public/ на Synology:
-rsync -avz --delete \
-  .next/standalone/ \
-  .next/static/ \
-  public/ \
-  prisma/ \
-  user@synology:/volume1/docker/kppdf-crm/
-```
+---
 
-## RBAC (6 ролей)
+## 📝 История изменений структуры
 
-| Роль | Видит | Права |
-|---|---|---|
-| ADMIN | всё | полный доступ |
-| DIRECTOR | все КП/маржа | управление, видит себестоимость |
-| ACCOUNTANT | финансы | видит себестоимость, регистрирует платежи |
-| MANAGER | только свои КП | право КП-редактор (costPrice виден — Q6 финансов ✅ C) |
-| PRODUCTION | производство | начальник производства |
-| STOREKEEPER | склад | кладовщик |
+### 24.06.2026 — Большая реорганизация
 
-Маржинальность (Q6 финансов) видна **всем ролям в полном виде** (включая `costPrice`) — PO принял C.
+- ✅ Удалён весь код (Dockerfile, src/, prisma/, tests/, package.json, tsconfig.json, vitest.config.ts, docker-compose.example.yml, next.config.ts, mimo.exe, validate-docs.py)
+- ✅ Удалены устаревшие документы (АНАЛИЗ-П1.md, АУДИТ-ОТЧЁТ.md, МОДУЛЬ-СКЛАД.md как stub 118 строк → переписан в полноценный каркас)
+- ✅ 19 .md-файлов перемещены в папки по доменам (01_КП, 02_Договор, 03_Производство, 04_Склад, 05_Финансы, 99_Справочники)
+- ✅ Опечатка «Сколад» → «Склад» повсеместно
+- ✅ Создан главный консолидатор **BIG-BOOK.md** в корне
+- ✅ Созданы сводные документы: **RBAC-MATRIX.md**, **GLOSSARY-MASTER.md**, **FLOW-MAP.md** в `99_Справочники\`
+- ✅ Расширен **04_Склад/МОДУЛЬ-СКЛАД.md** из 118-строчного stub в полноценный обзорный каркас (~400-500 строк)
+- ✅ Обновлены перекрёстные ссылки во всех МОДУЛЬ-доках (префикс `` → относительные пути)
 
-## Phase 2 — следующие шаги (не в Bootstrap)
+---
 
-1. UI редактора КП (3-зонный макет, 50+ полей, инлайн-редактирование таблицы, autosave)
-2. Бизнес-CRUD по модулям: Договор → Производство → Склад → Финансы
-3. История комментариев (правка F — таблица Comment готова, нужен UI)
-4. DocumentTemplate (конструктор шаблонов для КП/Договора)
-5. sharp API route для серверного сжатия фото (правка G)
-6. Email SMTP (mailpit в dev, корпоративный — production)
-7. «Картотека сделки = view» (SQL query поверх всех модулей)
-8. PDF gen (jsPDF v1 → Puppeteer v2)
-
-## Phase 1 Bootstrap — что НЕ входит (v2 polish)
-
-- Подробные UI компоненты для каждого модуля (Phase 2)
-- Тесты Vitest/Playwright (v2 polish) — критичные unit-тесты будут добавлены в Phase 2 для каждой API
-- Dockerfile multi-stage optimization (multi-arch build для ARM Synology)
-- Helm charts / GitHub Actions (v3 — при выходе на multi-pod)
-
-## Source of truth (где живёт схема)
-
-- `prisma/schema.prisma` ←→ `SCHEMA-CONSOLIDATED.md` (§1 модели, §2 FK + ON DELETE, §3 enum-ы, §4 Counter, §6 инварианты)
-- `OPEN-QUESTIONS-MASTER.md` — все 38 Q-решений применены в schema.prisma и src/lib
-- `СТЕК-ПРЕДПИСАНИЕ.md` §5 — финальное согласование стека (10 OQ + 5 доп. стековых Q)
-- `МАСТЕР-АУДИТ-V6.md` — финальный аудит v6
-- `МОДУЛЬ-*.md` (15 файлов) — исходные документы
-
-## Troubleshooting
-
-### `prisma migrate dev` падает с `PrismaPg adapter requires DATABASE_URL`
-
-Убедиться, что `.env` содержит валидный `postgresql://user:pass@host:5432/dbname`. Старый формат `postgres://` НЕ принимается Zod-валидацией.
-
-### `prisma generate` падает "Field comments is required"
-
-Если добавил новую модель `Comment` — нужно добавить обратную связь `comments Comment[]` на ВСЕ родительские модели (Proposal, Contract, ProductionOrder, Order) с правильным `onDelete` (Cascade).
-
-### `jwt.verify` падает на корректном токене после hot-reload
-
-HMR может сбросить singleton env-cache. Перезапустить `pnpm dev`. В продакшене этой проблемы нет.
-
-### BigInt serialization error в API
-
-Counter возвращает `string` (formatted). `peekCounter` возвращает `BigInt` — для API обернуть в `value.toString()`.
+> **Phase 1 Bootstrap миграций Prisma разблокирован.** Документы — это финальная согласованная база знаний, на основе которой разработчик может начинать `Prisma migrate dev`.
