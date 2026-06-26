@@ -51,6 +51,20 @@
 
 > Самые новые записи — сверху. Монотонная нумерация PSL-NNN.
 
+### PSL-004 — Архитектор: декомпозиция МОДУЛЬ-КОММЕРЧЕСКОЕ-ПРЕДЛОЖЕНИЕ.md (945 → 20 STUB)
+
+| Поле | Значение |
+|---|---|
+| **Дата** | 2026-06-26 |
+| **ID** | PSL-004 |
+| **Тип** | structure |
+| **Модуль** | КП |
+| **Автор** | Архитектор / Claude Sonnet-4.5 |
+| **Связанные OQ** | OQ-001, OQ-002, OQ-003, OQ-004, OQ-005 (5 baseline дыр из PSL-001) |
+| **Описание** | Завершён первый прогон Pipeline v6 (Phase 0 Decomposition). Декомпозиция `01_КП/МОДУЛЬ-КОММЕРЧЕСКОЕ-ПРЕДЛОЖЕНИЕ.md` (945 строк, 14 разделов) на **20 новых STUB-файлов** по 5 папкам иерархии `00-spr → 01-shablon → 02-konstruktor-kp → 03-zhiznennyj-cikl → 04-pravila` согласно AGENT-METHOD.md §3 Правило 3.1. Созданные STUB'ы: `01_КП/README.md` (entypoint модуля) + 7 файлов в `00-spr/` + 2 файла в `01-shablon/` + 6 файлов в `02-konstruktor-kp/` + 3 файла в `03-zhiznennyj-cikl/` + 2 файла в `04-pravila/`. Каждый STUB содержит минимум по AGENT-METHOD.md §5.2.1: `# <name>.md — <назначение>`, `> **Назначение.** 1-2 строки.`, `## 0. Контекст` + явный `⚠️ STUB` маркер (Правило 5.2.2 — после начала работы другой роли создатель STUB больше не трогает). Источник распущен: исходный 945-строковый файл удалён через `git rm` (содержимое остаётся в git history). Анти-паттерн §10 «что было хорошо» (исторический нарратив) исключён как отдельный файл (A4 AGENT-FORMAT.md) — распределён как контекст в целевых STUB'ах. |
+| **Причина** | Завершение первого прогона Pipeline v6. Явный handoff следующей роли — **Бизнес-аналитику** (промпт в [`AGENT-PROMPTS.md` §2](../../AGENT-PROMPTS.md)) для наполнения STUB'ов правилами `**Правило N.**` (Принцип П6). Сохранены все 5 baseline OQ-001..005 (PSL-001) — НЕ редактированы Архитектором (на них работает Аналитик). Сохранены 4 STUB README из PSL-002 (pre-launch scaffolding) как готовые слоты точек входа каждой папки — также НЕ редактированы. |
+| **Затронутые файлы** | **🆕 Создано (20 STUB):**<br>- `01_КП/README.md` (entypoint модуля)<br>- `01_КП/00-spr/00-README.md` (entypoint 00-spr)<br>- `01_КП/00-spr/00-glossary.md` ← из §0 + §13<br>- `01_КП/00-spr/00-orgs.md` ← из §3 + §5 + §9<br>- `01_КП/00-spr/00-clients.md` ← из §5 dropdown «Клиент»<br>- `01_КП/00-spr/00-products.md` ← из §4 + §6<br>- `01_КП/00-spr/00-out-of-scope.md` ← из §11 + §12<br>- `01_КП/01-shablon/01-konstruktor.md` ← из §5 dropdown «Шаблон» + §10 + СПОР-2<br>- `01_КП/01-shablon/01-primery.md` ← из §5 dropdown «Шаблон» (список)<br>- `01_КП/02-konstruktor-kp/02-korzina.md` ← из §4 + §2 Шаг 1 + §10<br>- `01_КП/02-konstruktor-kp/02-redaktor.md` ← из §5 макет ASCII + §2 Шаг 2 + §10 Karkas-Kit<br>- `01_КП/02-konstruktor-kp/02-tablica-pozicij.md` ← из §6 + §5 переключатели preview<br>- `01_КП/02-konstruktor-kp/02-smena-yurlitsa.md` ← из §3 целиком + §5 + §7 + §9<br>- `01_КП/02-konstruktor-kp/02-avtosoxranenie.md` ← из §8<br>- `01_КП/02-konstruktor-kp/02-knopki.md` ← из §7 + §2 Шаги 3-5<br>- `01_КП/03-zhiznennyj-cikl/03-statusy.md` ← из §2 + §14 п.1<br>- `01_КП/03-zhiznennyj-cikl/03-perehody.md` ← из §2 + §7<br>- `01_КП/03-zhiznennyj-cikl/03-konvertaciya-v-dogovor.md` ← из §2 Шаг 5 + §7 кнопка + §14 п.1 + §9<br>- `01_КП/04-pravila/04-rbac.md` ← из §9.1 + §3<br>- `01_КП/04-pravila/04-biznes-pravila.md` ← из §9 (все правила)<br><br>**🗑 Удалено (1 файл через `git rm`):**<br>- `01_КП/МОДУЛЬ-КОММЕРЧЕСКОЕ-ПРЕДЛОЖЕНИЕ.md` (945 строк; содержимое распущено по 20 STUB'ам; остаётся в git history для восстановления при необходимости)<br><br>**📝 Изменено (1 файл):**<br>- `PROJECT-STATE-LOG.md` (эта запись PSL-004)<br><br>**🚫 НЕ затронуты (сохранены как есть):**<br>- `01_КП/00-spr/00-otkrytye-voprosy.md` ✅ 5 baseline OQ-001..005 (PSL-001 baseline)<br>- `01_КП/01-shablon/00-README.md` ✅ (PSL-002 pre-launch STUB-маркер)<br>- `01_КП/02-konstruktor-kp/00-README.md` ✅ (PSL-002 pre-launch STUB-маркер)<br>- `01_КП/03-zhiznennyj-cikl/00-README.md` ✅ (PSL-002 pre-launch STUB-маркер)<br>- `01_КП/04-pravila/00-README.md` ✅ (PSL-002 pre-launch STUB-маркер) |
+
 ### PSL-003 — Внедрение финального стека (устранение drift в навигации)
 
 | Поле | Значение |
