@@ -47,7 +47,24 @@
 
 > Самые новые записи — сверху. Монотонная нумерация PSL-NNN.
 
-### PSL-007 — Wrap-up 2026-06-26: methodology improvements deferred to Run 0/5 Аналитика
+### PSL-008 — Launch-package для ### PSL-009 — Launch-package для Моделировщика данных (LAUNCH-MODELER.md) [2026-06-26]
+
+Создан `01_КП/LAUNCH-MODELER.md` (~460 строк) — mirror `LAUNCH-ANALYST.md` для роли 3 Data Modeler. 9 файлов attach в 3 пакетах. Промпт с 6 ограничениями + 9 edge cases (ON DELETE 60+ FK / soft-delete uniform per SCHEMA-CONSOLIDATED §0.1 / snapshot-поля / Counter safe-increment / UNIQUE StockRecord / 4 новые сущности Склада v6 / Refund отдельно от Payment / CHECK constraints / 17 enum-типов / ~22 enum-а). 11 CHECK-листов + 5 шагов пост-обработки с ОБЯЗАТЕЛЬНОЙ QA-петлёй по Правилу 3.1. ⚠️ HARD LIMIT OVERRIDE (460 > 400 hard, аналог PSL-003 для BIG-BOOK.md). Затронуты: `01_КП/LAUNCH-MODELER.md` (NEW), `CHECKLIST.md` §3+§4+§10 (обновлено), `PROJECT-STATE-LOG.md` (эта запись PSL-009). Причина: Pipeline v6 — следующая роль после Run 1..5 Аналитика КП. Пререквизит для `LAUNCH-QA-MODELER.md` + `LAUNCH-UX.md` + Phase 1 Bootstrap миграций Prisma. Тип: structure. Модуль: КП.
+
+### PSL-008 — Launch-package для Run 0/5 Бизнес-аналитика: методология (LAUNCH-ANALYST-METHODOLOGY.md) [2026-06-26]
+
+| Поле | Значение |
+|---|---|
+| **Дата** | 2026-06-26 |
+| **ID** | PSL-008 |
+| **Тип** | structure (launch-package preparation) |
+| **Модуль** | Универсально |
+| **Автор** | Архитектор / Claude Sonnet-4.5 |
+| **Связанные OQ** | — |
+| **Описание** | Создан `LAUNCH-ANALYST-METHODOLOGY.md` в root — готовый copy-paste пакет для запуска Бизнес-аналитика в новой сессии Codebuff для применения 3 улучшений методологии из PSL-007. Пакет: (а) **attach-list из 8 файлов** в 2 пакетах [A: 5 agent-infra (AGENT-ENTRYPOINT/ROLES/FORMAT/PROMPTS/REVIEW) + B: 3 канонический контекст (99_СПОРНЫЕ-МОМЕНТЫ + 99_OPEN-QUESTIONS-MASTER + PROJECT-STATE-LOG с PSL-007)] в порядке приоритета; (б) **расширенный промпт Аналитика** (copy-paste) с ⛔ 6 ограничениями (решения неизменны, scoring ОДНА шкала для 15 СПОР + 38 Q, шаблон 9 полей, DECISION-METHODOLOGY.md 5 фаз + портируемый); (в) **3 задачи подробно** (scoring постфактум + шаблон СПОРА + новый файл методологии); (г) **output format в таблице** (было/стало + coverage + раздел DECISION-METHODOLOGY.md); (д) **пост-обработка 6 шагов** (5 видов действий по CHECKLIST и PSL); (е) **9 CHECK-лист контроля качества** запуска. Структурно mirror `LAUNCH-ANALYST.md` (в 01_КП/) но для **универсального scope** Run 0/5 — не привязан к модулю КП. Сам DECISION-METHODOLOGY.md (5-фазный алгоритм) будет создан Аналитиком в Run 0/5 как портируемый документ. |
+| **Причина** | Реализация deferred improvements из PSL-007 (wrap-up methodology). Возможность отделить «подготовка launch-package» (Architect, сейчас) от «применение методологии» (Analyst, позже в Run 0/5) для чёткого atomic responsibility по Правилу 3.1 AGENT-ROLES.md. LAUNCH-пакет готов копи-пастой — PO может стартовать Run 0/5 когда удобно. После применения Run 0/5 появится следующий PSL-NNN (Run 0/5 applied) с записями в СПОРНЫЕ-МОМЕНТЫ.md / OPEN-QUESTIONS-MASTER.md / DECISION-METHODOLOGY.md. |
+| **Затронутые файлы** | **🆕 Создано (1 файл):**<br>- `LAUNCH-ANALYST-METHODOLOGY.md` (~310 строк; root; mirror структуры LAUNCH-ANALYST.md для другой роли/scope; содержит 8 разделов: §0 контекст, §1 attach-list (2 пакета по 4 файла), §2 copy-paste промпт, §3 скоуп 3 задач, §4 output format, §5 пост-обработка 6 шагов, §6 CHECK-лист 9 проверок, §7 связанные документы, §8 версия)<br><br>**📝 Изменено (1 файл):**<br>- `CHECKLIST.md` §3 «Текущее состояние» — строка «Methodology deferred» заменена на «Methodology Run 0/5 launch-package ready (см. `LAUNCH-ANALYST-METHODOLOGY.md` и `PROJECT-STATE-LOG.md` PSL-007)»; §10 «Агентская инфраструктура» — добавлена строка с ссылкой на `LAUNCH-ANALYST-METHODOLOGY.md`<br><br>**➕ PROJECT-STATE-LOG.md** — эта запись PSL-008 (свежее сверху) |
+| **Затронутые файлы** | - `PROJECT-STATE-LOG.md` (эта запись PSL-008) |
 
 | Поле | Значение |
 |---|---|

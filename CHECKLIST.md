@@ -54,13 +54,14 @@
 | Параметр | Значение |
 |---|---|
 | Активный модуль | `01_КП/` (20 STUB готовы, 5 baseline OQ засеяны) |
-| Последняя запись PSL | **PSL-007** — wrap-up 2026-06-26, methodology improvements deferred (2026-06-26) |
+| Последняя запись PSL | **PSL-010** — Phase 0 Decomposition для 4 модулей (Договор / Производство / Склад / Финансы): scaffolding + 4 LAUNCH-ARCHITECT-{02,03,04,05}.md + CROSS-MODULE-OQ.md, 2026-06-26 |
 | Pipeline прогонов Аналитика | Run 1/5 в работе (RBAC + инварианты + state-машина) |
-| Methodology deferred до Run 0/5 | (1) scoring 1-5 в 15 СПОР + 38 OQ; (2) шаблон нового СПОРА в `СПОРНЫЕ-МОМЕНТЫ.md` §0; (3) **новый** файл `99_Справочники/DECISION-METHODOLOGY.md` (портируемый 5-фазный алгоритм) — см. `PROJECT-STATE-LOG.md` PSL-007 |
+| Methodology Run 0/5 launch-package ready | Launch-package [`LAUNCH-ANALYST-METHODOLOGY.md`](LAUNCH-ANALYST-METHODOLOGY.md) ✅ (8 файлов attach, 3 задачи). Фактическое применение deferred до момента, когда PO решит (после Run 1..5 КП или параллельно). Сам. `DECISION-METHODOLOGY.md` будет создан Аналитиком в Run 0/5 как портируемый 5-фазный алгоритм — см. `PROJECT-STATE-LOG.md` PSL-007 |
 | Стек согласован | ✅ Next.js 16 + React 19 + Mantine + Tailwind 4 + Prisma 7 + PostgreSQL 16 |
 | Открытых Q | 0 (все 38 ✅ ПРИНЯТО 2026-06-24) |
 | Активных СПОР | 0 (все 15 ✅ закрыты) |
 | V-проверок пройдено | 73/73 (100%) |
+| Phase 0 Decomposition | ✅ Все 5 модулей (КП + 4 новых) имеют 5-podpaka структуру + LAUNCH-пакеты. Параллельный запуск 4 Архитекторов готов (PSL-010) |
 
 **Полное состояние:** последние записи в [`PROJECT-STATE-LOG.md`](PROJECT-STATE-LOG.md) §1 (сверху вниз). Глобальный аудит — [`99_Справочники/МАСТЕР-АУДИТ-V6.md`](99_Справочники/МАСТЕР-АУДИТ-V6.md).
 
@@ -72,12 +73,12 @@
 
 | # | Роль | Когда запускать | Launch-пакет | Attach-пакет |
 |---|---|---|---|---|
-| 1 | **Архитектор** | Декомпозиция большого .md / структурные изменения папок | [`01_КП/LAUNCH-ARCHITECT.md`](01_КП/LAUNCH-ARCHITECT.md) | 10 файлов (см. §1 LAUNCH-ARCHITECT) |
+| 1 | **Архитектор** | Декомпозиция большого .md / структурные изменения папок | [`01_КП/LAUNCH-ARCHITECT.md`](01_КП/LAUNCH-ARCHITECT.md) ✅ (КП, 1 сессия); [`02_Договор/LAUNCH-ARCHITECT-02.md`](02_Договор/LAUNCH-ARCHITECT-02.md) ✅ (Договор); [`03_Производство/LAUNCH-ARCHITECT-03.md`](03_Производство/LAUNCH-ARCHITECT-03.md) ✅ (Производство); [`04_Склад/LAUNCH-ARCHITECT-04.md`](04_Склад/LAUNCH-ARCHITECT-04.md) ✅ (Склад, **2 сессии** для OOM-mitigation); [`05_Финансы/LAUNCH-ARCHITECT-05.md`](05_Финансы/LAUNCH-ARCHITECT-05.md) ✅ (Финансы) | 10-12 файлов + [`CROSS-MODULE-OQ.md`](99_Справочники/CROSS-MODULE-OQ.md) |
 | 2 | **Бизнес-аналитик** | Наполнение STUB правилами `**Правило N.**` | [`01_КП/LAUNCH-ANALYST.md`](01_КП/LAUNCH-ANALYST.md) | 11 файлов (см. §1 LAUNCH-ANALYST) |
-| 3 | **Моделировщик (Prisma)** | Схема БД, миграции, ON DELETE | `LAUNCH-MODELER.md` (нет — создать когда понадобится) | TBD |
+| 3 | **Моделировщик (Prisma)** | Схема БД, миграции, ON DELETE | [`01_КП/LAUNCH-MODELER.md`](01_КП/LAUNCH-MODELER.md) ✅ (9 файлов attach: 4 инфра + 3 справочники + 2 STUB Аналитика Run 1; для Run 5/5 после Run 1..5 добавить ещё 5 STUB) | 9-11 файлов (см. §1 LAUNCH-MODELER) |
 | 4 | **UX-дизайнер** | UI-каркасы, макеты страниц, модальные окна | `LAUNCH-UX.md` (нет — создать) | TBD |
 | 5 | **Техписатель** | Единый стиль, анти-паттерны A1-A11, proofreading | `LAUNCH-WRITER.md` (нет — создать) | TBD |
-| 6 | **QA-инженер** | Прогон V-проверок, gap-карточки, спецтесты | `LAUNCH-QA.md` (нет — создать) | TBD |
+| 6 | **QA-инженер** | Прогон V-проверок, gap-карточки, спецтесты | [`01_КП/LAUNCH-QA-KP.md`](01_КП/LAUNCH-QA-KP.md) ✅ (KP-instantiation v1 для Run 1/5; для других модулей — копировать структуру) | TBD (зависит от модуля) |
 | 7 | **Координатор** | Итоговая сводка, handoff между сессиями | `LAUNCH-COORDINATOR.md` (нет — создать) | TBD |
 
 **Если нужной роли нет в списке** — создай `LAUNCH-X.md` по образцу `LAUNCH-ARCHITECT.md` (mirror структуры), добавь строку в эту таблицу и обнови §0 (через PSL-NNN).
@@ -185,6 +186,9 @@
 - [`AGENT-FORMAT.md`](AGENT-FORMAT.md) — П1-П8 принципы + анти-паттерны A1-A11
 - [`AGENT-REVIEW.md`](AGENT-REVIEW.md) — MUST/SHOULD чек-лист самопроверки (hard limit 250/400)
 - [`AGENT-PROMPTS.md`](AGENT-PROMPTS.md) — промпт-шаблоны для запуска ролей
+- [`LAUNCH-ANALYST-METHODOLOGY.md`](LAUNCH-ANALYST-METHODOLOGY.md) — launch-package для **Run 0/5 методология** (scoring 1-5 + шаблон СПОРА + DECISION-METHODOLOGY.md)
+- [`01_КП/LAUNCH-MODELER.md`](01_КП/LAUNCH-MODELER.md) — launch-package для **Моделировщика данных** (Prisma Schema Spec для 32 моделей; mirror LAUNCH-ANALYST.md)
+- [`01_КП/LAUNCH-QA-KP.md`](01_КП/LAUNCH-QA-KP.md) — launch-package для **QA-валидатора** (READ-only роль, обязательная QA-петля по Правилу 3.1)
 
 ### Журналы состояния
 
