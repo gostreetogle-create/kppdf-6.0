@@ -54,8 +54,9 @@
 | Параметр | Значение |
 |---|---|
 | Активный модуль | `01_КП/` (20 STUB готовы, 5 baseline OQ засеяны) |
-| Последняя запись PSL | **PSL-005** — `01_КП/LAUNCH-ANALYST.md` создан (2026-06-26) |
+| Последняя запись PSL | **PSL-007** — wrap-up 2026-06-26, methodology improvements deferred (2026-06-26) |
 | Pipeline прогонов Аналитика | Run 1/5 в работе (RBAC + инварианты + state-машина) |
+| Methodology deferred до Run 0/5 | (1) scoring 1-5 в 15 СПОР + 38 OQ; (2) шаблон нового СПОРА в `СПОРНЫЕ-МОМЕНТЫ.md` §0; (3) **новый** файл `99_Справочники/DECISION-METHODOLOGY.md` (портируемый 5-фазный алгоритм) — см. `PROJECT-STATE-LOG.md` PSL-007 |
 | Стек согласован | ✅ Next.js 16 + React 19 + Mantine + Tailwind 4 + Prisma 7 + PostgreSQL 16 |
 | Открытых Q | 0 (все 38 ✅ ПРИНЯТО 2026-06-24) |
 | Активных СПОР | 0 (все 15 ✅ закрыты) |
