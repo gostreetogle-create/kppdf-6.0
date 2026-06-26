@@ -224,10 +224,11 @@
 ### Модули (5)
 
 - `01_КП/` — модуль КП (20 STUB по 5 папкам + README + LAUNCH-ARCHITECT + LAUNCH-ANALYST)
-- `02_Договор/` — `МОДУЛЬ-ДОГОВОР.md` (~250 строк)
-- `03_Производство/` — `МОДУЛЬ-ПРОИЗВОДСТВО.md` (~270 строк)
-- `04_Склад/` — `МОДУЛЬ-СКЛАД-ПОДРОБНЫЙ.md` + `МОДУЛЬ-СКЛАД-UI.md`
-- `05_Финансы/` — `МОДУЛЬ-ФИНАНСЫ.md` (~280 строк)
+- `99_Справочники/CROSS-MODULE-OQ.md` — 4 сквозных OQ для Parallel Architect run
+- `02_Договор/` — `МОДУЛЬ-ДОГОВОР.md` (~250 строк) + `_ARCHITECT-DECOMPOSITION-DRAFT.md` (22 файла, 16 NEW + 6 EXISTING)
+- `03_Производство/` — `МОДУЛЬ-ПРОИЗВОДСТВО.md` (~270 строк) + `_ARCHITECT-DECOMPOSITION-DRAFT.md` (22 файла, 16 NEW + 6 EXISTING)
+- `04_Склад/` — `МОДУЛЬ-СКЛАД-ПОДРОБНЫЙ-PART1.md` (§1-§6, 463 строк) + `-PART2.md` (§7-§8, 357 строк) + `_ARCHITECT-DECOMPOSITION-DRAFT-SESSION1.md` (17 NEW) + `-SESSION2.md` (10 NEW delta) + `МОДУЛЬ-СКЛАД-UI.md`
+- `05_Финансы/` — `МОДУЛЬ-ФИНАНСЫ.md` (~280 строк) + `_ARCHITECT-DECOMPOSITION-DRAFT.md` (19 NEW + 7 EXISTING = 26 файлов, Strategy C 2 constructor-papki `02-page-orders` + `02-page-payments`)
 
 ### Корневые
 
