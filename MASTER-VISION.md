@@ -86,6 +86,7 @@
 | **Закрытие Универсал** | ТЗ-0000 Universal Closure Protocol (6 фаз) | ТЗ-0000 | ✅ done (применён ко всем CLOSURE-REPORT) |
 | **Run 2/5 Аналитик Договор** | ТЗ-011: 4 STUB (RBAC + правила + статусы + переходы) — mirror proven ТЗ-002 + 4 additions (КП-compatibility + BUSINESS-VISION + perehody-4th + guardrail) | ТЗ-011 | 📋 ready (запуск параллельным Аналитик-агентом) |
 | **Полный audit / консолидация** | MASTER-VISION.md + CHECKLIST.md v1.4 + консолидация в 3 masters + ТЗ-011 spec (Run 2/5) | PSL-026 + PSL-031 + PSL-032 | ✅ done (ТЗ-011 ready к запуску) |
+| **Run 3/5 Аналитик Производство** | ТЗ-012: 4 STUB (RBAC + правила + статусы + переходы) — mirror ТЗ-011 + §0.5 Schema Constraints Note (**Option C Hybrid**: 4 schema enums + 8 business statuses computed via `isActive`/`plannedStart`/`actualStart`/`quantityActual`) + 5 additions (Task sub-state-machine `task_CREATED/task_PLANNED/task_INWORK/task_PARTIALLY/task_DONE`, **4-module cross-link КП+Договор+Склад+Финансы**, Auto-IN ЗК Completed → Склад, Auto-Refund ЗК Cancelled → Финансы per СПОР-12, CHAIN-ДОГ hard-link mirror) | ТЗ-012 + LAUNCH-ANALYST-PROIZVODSTVO (TBD) | 📋 ready (Run 3 = **pivot**, downstream Run 4/5 Склад + Run 5/5 Финансы в parallel branches) |
 
 **БЛОКИРУЮЩИЙ РЕЗУЛЬТАТ:** Phase 1 Bootstrap Prisma + Phase 2 Mantine UI **РАЗБЛОКИРОВАНЫ** (per AUDITOR PASS-WITH-WARNINGS + INTEGRATION-PLAN §6.3). ТЗ-004 deliverеd `prisma/schema.prisma` с verified Comment + packageTag (976 строк verified via grep). ТЗ-002 deliverеd RBAC-middleware готов к Phase 2.
 

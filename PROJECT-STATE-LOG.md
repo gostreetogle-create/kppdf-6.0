@@ -47,6 +47,40 @@
 
 > Самые новые записи — сверху. Монотонная нумерация PSL-NNN.
 
+### PSL-035 — ТЗ-012 создан (Run 3/5 Аналитик Производство — 4 STUB fill spec + §0.5 Schema Constraints Note + 5 multi-module additions)
+
+| Поле | Значение |
+|---|---|
+| **Дата** | 2026-06-27 |
+| **Тип** | process |
+| **Модуль** | Производство |
+| **Описание** | Создан `99_Справочники/TASKS/ТЗ-012-RUN-3-5-АНАЛИТИК-ПРОИЗВОДСТВО.md` (~1100 строк, 11 разделов + §0.5 Schema Constraints Note) — техзадание для параллельного ИИ-агента на заполнение 4 STUB модуля Производство. Mirror ТЗ-002 (Run 1/5 КП ✅ CLOSED PSL-006) + ТЗ-011 (Run 2/5 Договор ✅ FINALIZED PSL-032) + **5 Производство-specific additions**: (1) ProductionTask sub-state-машина (5 под-статусов task_CREATED/task_PLANNED/task_INWORK/task_PARTIALLY/task_DONE — НЕ mirror ЗК-статусы), (2) §5.5 Multi-module cross-link (4 modules: КП + Договор + Склад + Финансы vs ТЗ-011 = 1 cross-link), (3) §0.5 Schema Constraints Note (Option C Hybrid — schema enums preserved 4, 8 business statuses computed via isActive + plannedStart/actualStart + quantityActual/quantityPlanned), (4) Auto-IN trigger ЗК Completed → Склад (NEW cross-module), (5) Auto-Refund trigger ЗК Cancelled → Финансы per СПОР-12 (NEW cross-module). |
+| **Причина** | Производство = junction 4 модулей (КП → Договор → ЗК → Склад + Финансы). Без Run 3/5 → Run 4/5 + Run 5/5 строят на неполном фундаменте → drift по всей цепочке. INTEGRATION-PLAN §6.2 Tier-DAG Run 3 = pivot, downstream одновременно требует 2 модуля. |
+| **4 STUB targets** | `03_Производство/04-pravila/04-rbac.md` (~350 строк, ≥50 правил: 20 ЗК A-rules + 10 Task T-rules + OW/V/C/VER); `04-biznes-pravila.md` (~400 строк, ≥30 правил в 12 группах); `03-statusy.md` (~250 строк, 8 ЗК + 5 Task sub + 3 negative + КП↔ЗК↔Договор mapping); `03-perehody.md` (~250 строк, ≥10 ЗК + ≥5 Task sub + 2 Mermaid). |
+| **Cross-module consistency** | 4 hard-link groups (КП + Договор + Склад + Финансы) — mirror proven ТЗ-011 CHAIN pattern. Hard-link convention enforcing: колонка «Правило» = one-liner `↳ см. INV-XXX-NNN` без дубля upstream/downstream формулировок. |
+| **Затронутые файлы** | **🆕 Создан (1 файл):**<br>- `99_Справочники/TASKS/ТЗ-012-RUN-3-5-АНАЛИТИК-ПРОИЗВОДСТВО.md` (~1100 строк, 11 разделов + §0.5 Schema Constraints Note per Option C Hybrid validation by thinker-with-files-gemini).<br><br>**📝 Обновлено в commit 2 (Option C fixes):**<br>- `MASTER-VISION.md` §4 — добавлена строка ТЗ-012 после ТЗ-011 row.<br>- Эта запись PSL-035 (above).<br><br>**🚫 НЕ затронуты:**<br>- ТЗ-002 (frozen Run 1/5 ✅ CLOSED). ТЗ-011 (frozen Run 2/5 ✅ FINALIZED). `03_Производство/МОДУЛЬ-ПРОИЗВОДСТВО.md` (source V0, frozen). `01_КП/04-pravila/*` + `02_Договор/04-pravila/*` (frozen Run 1/2 results). `99_Справочники/*` каноны (frozen). `prisma/schema.prisma` (verified, НЕ modified — Option C preserves schema enums). |
+| **Связь** | INTEGRATION-PLAN §6.2 Tier-DAG Run 3/5 = pivot, downstream = Run 4/5 Склад + Run 5/5 Финансы (parallel branches). После Run 3 → Run 4 + Run 5 могут стартовать. |
+| **Готовность** | ✅ Ready к запуску параллельным Аналитик-агентом. Пререквизит: Run 2/5 Договор finished or running parallel (CHAIN-ДОГ правила могут иметь placeholder hard-link если Договор ещё не заполнен). |
+
+---
+
+### PSL-034 — Phase 1 Bootstrap Prisma actual deploy выполнен (3/4 commands PASS, migrate dev BLOCKED на P1001)
+
+| Поле | Значение |
+|---|---|
+| **Дата** | 2026-06-27 |
+| **Тип** | process |
+| **Модуль** | Универсально |
+| **Описание** | Выполнены **4 команды** из MASTER-VISION §4 next-step CLI: (1) `pnpm install` ✅ **PASS** (lockfile up to date, Done in 474ms); (2) `pnpm exec prisma generate` ✅ **PASS** (Prisma Client v7.8.0 → `src/generated/prisma/`, **60 файлов** для **52 моделей**); (3) `pnpm exec prisma migrate dev` ❌ **BLOCKED P1001** (`Can't reach database server at "localhost:5432"` — **expected**, no PostgreSQL в sandbox); (4) `pnpm test` ✅ **PASS — 407/407 tests** (24 test files, Vitest + better-sqlite3 in-memory mocks, no DB needed); (5) `pnpm exec tsc --noEmit` ✅ **PASS — 0 type errors** (full TypeScript schema type-safe). **🟢 PARTIAL DEPLOY 3/4 PASS** — schema VERIFIED + Prisma Client generated + 407 tests passing + type-safe, но **НЕ deployed to real DB** (требует PostgreSQL instance). |
+| **Причина** | Запрос PO «выполни Phase 1 Bootstrap Prisma actual deploy — pnpm install && pnpm prisma migrate dev && pnpm test && pnpm tsc (per MASTER-VISION §4 next-step CLI)». Phase 1 Bootstrap был START-READY per PSL-028 (⚠️ PASS-WITH-WARNINGS 75%) + INTEGRATION-PLAN §6.3 + AUDITOR fix. |
+| **Environment** | Node v24.15.0 ✓, pnpm 11.12.1 ✓, PostgreSQL ❌ (no `postgres.exe` running, `pg_isready` failed на `localhost:5432`), Docker ❌, `.env` / `.env.local` / `.env.example` ❌ (DATABASE_URL unset). Аналогично ТЗ-004 closure: «sandbox не имеет PostgreSQL». |
+| **Schema verified** | **52 модели** в `prisma/schema.prisma`: 49 baseline (v5) + 3 правки Phase 1 Bootstrap per ТЗ-004 (A/E/F): (a) `packageTag: String?` indexed на Proposal/Contract/ProductionOrder (правка E), (b) `Comment: { id, packageTag, authorId, text @db.Text, createdAt, isArchived }` (правка F), (c) `Organization` discriminator type для ИП/Физ.лиц. Schema-ONLY PostgreSQL, NO SQLite fallback (per `prisma/schema.prisma` comment «NO SQLITE. NO FALLBACK. ONLY POSTGRESQL. Schema is production-ready with all 47 models»). |
+| **Side observation (action item)** | `src/generated/prisma/*` (**60 файлов**, ~1.5 MB) **НЕ в `.gitignore`** → попадают в `git status` как untracked (auto-generated). **Рекомендация для next session:** добавить `/src/generated/prisma` в `.gitignore` (auto-generated, пересоздаётся при каждом `pnpm prisma generate`). |
+| **Затронутые файлы** | **📝 Generated runtime (НЕ закоммичены):**<br>- `src/generated/prisma/*` (60 файлов Prisma Client v7.8.0).<br><br>**🚫 НЕ затронуты:**<br>- `prisma/schema.prisma` (verified, NOT modified — schema enums preserved per Run 3/5 ТЗ-012 §0.5 Option C Hybrid pattern).<br>- `package.json` (NOT modified, lockfile up to date).<br>- Все STUB-файлы модулей (frozen).<br>- `04_Склад/...` / `05_Финансы/...` (Run 4/5 + Run 5/5 зоны — Аналитики пишут). |
+| **Связь** | Phase 1 Bootstrap Prisma per MASTER-VISION §5 + INTEGRATION-PLAN §6.3. Same P1001 blocker as ТЗ-004 closure — sandbox не имеет PostgreSQL. Запуск требует PostgreSQL instance (Synology DSM production или local dev DB). |
+
+---
+
 ### PSL-033 — LAUNCH-ANALYST-DOGOVOR.md создан (готов к запуску Run 2/5 Аналитика Договор параллельным агентом через CODEBUFF spawn)
 
 | Поле | Значение |
