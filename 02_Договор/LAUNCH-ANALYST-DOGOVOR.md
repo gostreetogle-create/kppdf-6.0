@@ -25,14 +25,16 @@
 
 > ⚠️ **Порядок важен** — инфраструктурные → каноны → домен → STUB-ы.
 
-### Пакет A — Агентная инфраструктура (4 файла, ОБЯЗАТЕЛЬНО)
+### Пакет A — Агентная инфраструктура (6 файлов, ОБЯЗАТЕЛЬНО)
 
 | # | Путь | Зачем Аналитику |
 |---|---|---|
-| 1 | [`AGENT-METHOD.md`](../../AGENT-METHOD.md) | §1 «Быстрый старт» + §5.3 «Граница решений» (автономия) + §5.6 «Pre-action + Post-action Checkpoint» (ОБЯЗАТЕЛЬНО) + §6 (шаблон OQ) |
-| 2 | [`AGENT-ROLES.md`](../../AGENT-ROLES.md) | §2.2 **Бизнес-аналитик** (зона ответственности, проверки, чего НЕ делать) + §3 Pipeline |
-| 3 | [`AGENT-FORMAT.md`](../../AGENT-FORMAT.md) | §1 Принципы П1-П8 (нумерация правил), §5 анти-паттерны, §2.2 шаблон раздела |
-| 4 | [`AGENT-REVIEW.md`](../../AGENT-REVIEW.md) | Самопроверка: MUST (структура, нумерация, hard limit 400) + SHOULD (edge-кейсы 3 типа) |
+| 1 | [`AGENT-ENTRYPOINT.md`](../../AGENT-ENTRYPOINT.md) | ~185 строк: slim master + навигация `00 → 01 → 02 → 03 → 04`. **КРИТИЧЕН** для понимания slim convention |
+| 2 | [`AGENT-METHOD.md`](../../AGENT-METHOD.md) | §1 «Быстрый старт» + §5.3 «Граница решений» (автономия) + §5.6 «Pre-action + Post-action Checkpoint» (ОБЯЗАТЕЛЬНО) + §6 (шаблон OQ) |
+| 3 | [`AGENT-ROLES.md`](../../AGENT-ROLES.md) | §2.2 **Бизнес-аналитик** (зона ответственности, проверки, чего НЕ делать) + §3 Pipeline |
+| 4 | [`AGENT-FORMAT.md`](../../AGENT-FORMAT.md) | §1 Принципы П1-П8 (нумерация правил), §5 анти-паттерны, §2.2 шаблон раздела |
+| 5 | [`AGENT-PROMPTS.md`](../../AGENT-PROMPTS.md) | §2 **канонический промпт Аналитика** (базовая 7-строчная версия; расширяется в §2 ниже) + §5 формат отчёта Координатора |
+| 6 | [`AGENT-REVIEW.md`](../../AGENT-REVIEW.md) | Самопроверка: MUST (структура, нумерация, hard limit 400) + SHOULD (edge-кейсы 3 типа) |
 
 ### Пакет B — Strategic + Канонический контекст (5 файлов, ОБЯЗАТЕЛЬНО)
 
@@ -62,7 +64,7 @@
 | 16 | [`02_Договор/03-zhiznennyj-cikl/03-statusy.md`](../03-zhiznennyj-cikl/03-statusy.md) | 🔴 **P0 — ТРЕТИЙ**. Ровно 7 статусов + маппинг КП ↔ Договор + negative-rules |
 | 17 | [`02_Договор/03-zhiznennyj-cikl/03-perehody.md`](../03-zhiznennyj-cikl/03-perehody.md) | 🔴 **P0 — ЧЕТВЁРТЫЙ** (4-й target!). ≥11 переходов + Mermaid stateDiagram-v2 + audit-log pattern |
 
-**Итого attach:** 17 файлов = ~3500 строк контекста. Безопасно для OOM (typical Codebuff limit ~30k tokens).
+**Итого attach:** 19 файлов = ~3800 строк контекста. Безопасно для OOM (typical Codebuff limit ~30k tokens; 19 × ~200 строк = ~32k tokens → близко к лимиту, но допустимо).
 
 > **НЕ прикладывать в этой сессии** (отложено, чтобы не превысить OOM):
 > `02_Договор/02-konstruktor-dogovora/*` (4 файла) — относятся к Run 2/5 но не Р0 targets. `02_Договор/00-spr/*` (4 файла) — spr data, не targets. `02_Договор/01-shablon/*` (2 файла) — shablony, не target.
@@ -122,6 +124,11 @@
    - ⛔ ЗАПРЕЩЕНО дублировать формулировки КП-правил в Договор.
    - Колонка «Правило» в строках CHAIN-KP содержит ТОЛЬКО one-liner:
      `↳ см. INV-КП-CONV-001` со ссылкой в Source column.
+   - **Concrete row пример** (по ТЗ-011 §6.2 Группа 6):
+
+     ```
+     | INV-ДОГ-CHAIN-KP-001 | ↳ см. INV-КП-CONV-001 (PAID КП 🛑 → Договор) | INV-КП-CONV-001 | МОДУЛЬ-КП §14 + СПОР-5 |
+     ```
    - Не пиши «Запрещено конвертировать PAID КП в Договор» в Договор —
      это уже есть в КП. Просто ссылайся.
    - Hard-link convention — ЗАЩИТА от drift между модулями.
@@ -184,16 +191,21 @@
      consistency в ID-пространстве.
 
 9. **Mermaid diagram in 03-perehody.md** — ОБЯЗАТЕЛЬНО с:
-   - Все 7 статусов: `[*] --> DRAFT`,
-     `DRAFT --> SENT/ARCHIVED/TERMINATED`,
-     `SENT --> SIGNED_CLIENT/DRAFT`,
-     `SIGNED_CLIENT --> IN_PROGRESS/SENT`,
-     `IN_PROGRESS --> COMPLETED/TERMINATED`,
-     `COMPLETED --> ARCHIVED/TERMINATED`,
-     `ARCHIVED --> COMPLETED`,
-     `TERMINATED --> [*]`.
-   - `IN_PROGRESS --> TERMINATED: term` (расторжение в работе) —
-     ОБЯЗАТЕЛЬНО (ТЗ-011 §6.4 после code-reviewer fix).
+   - Все 7 статусов и ОБЯЗАТЕЛЬНЫЕ arrows:
+     - `[*] --> DRAFT: Конвертация из КП`
+     - `DRAFT --> SENT: send Отправить клиенту`
+     - `DRAFT --> ARCHIVED: archive Ошибка`
+     - `DRAFT --> TERMINATED: term Отмена до отправки`
+     - `SENT --> SIGNED_CLIENT: sign Подписан клиентом (manual)`
+     - `SENT --> DRAFT: recall Отозвать`
+     - `SIGNED_CLIENT --> IN_PROGRESS: activate Связь с ЗК (auto)`
+     - `SIGNED_CLIENT --> SENT: cancel Отмена подписи (admin/director)`
+     - `IN_PROGRESS --> COMPLETED: finish ЗК → COMPLETED`
+     - **🆕 `IN_PROGRESS --> TERMINATED: term Расторжение в работе`** (ОБЯЗАТЕЛЬНО, добавлено per ТЗ-011 code-reviewer fix #5)
+     - `COMPLETED --> ARCHIVED: archive Auto 90 дней / manual`
+     - `COMPLETED --> TERMINATED: term Клиент отказался платить`
+     - `ARCHIVED --> COMPLETED: restore Восстановить (admin)`
+     - `TERMINATED --> [*]: final`
 
 10. **Каждый STUB после наполнения должен иметь:**
     - Шапка с **Назначение**, **Автор** (Run 2/5 Аналитик,
@@ -221,9 +233,9 @@ Mermaid validity criteria #11) перед сдачей.
 
 ---
 
-## 3. Карта прогонов Аналитика v6 по модулям (multi-run обзор)
+## 3. Кросс-модульная Tier-DAG карта (cross-module, НЕ intra-module)
 
-> Договор = Run 2/5. Другие модули в других сессиях.
+> **Это cross-module карта прогонов** (КП → Договор → Производство → Склад → Финансы), а НЕ intra-module приоритеты внутри КП (как в `01_КП/LAUNCH-ANALYST.md` §3 «Карта приоритетов 20 STUB» — это другой §3). **Аналитик Договор работает поверх уже готового КП (Run 1/5 ✓), НЕ внутри КП**. Поэтому этот §3 = multi-run по модулям, не STUB-приоритеты.
 
 | Run | Модуль | STUB-ы | Статус |
 |---|---|---|---|
@@ -398,8 +410,11 @@ git push origin main
 
 ### Шаг G: Возможный следующий шаг
 
+**Вариант 1 (sequential, низкий риск):**
 - **Run 3/5** (Производство) — mirror Run 2/5 по аналогичному LAUNCH-пакету. Или:
 - **Phase 1 Bootstrap actual deploy** — `pnpm install && pnpm prisma migrate dev && pnpm test && pnpm tsc` (per MASTER-VISION §4 next-step CLI).
+
+**Вариант 2 (PARALLEL, высокий throughput):** запустить **Run 3/5 Производство** в одной параллельной CODEBUFF сессии + **Phase 1 Bootstrap deploy** в другой параллельной CODEBUFF сессии — оба идут независимо, могут финишировать одновременно (24 ч wall-clock vs ~48 ч sequential).
 
 ---
 
@@ -415,7 +430,7 @@ git push origin main
 
 ✅ **CHECK 5: Hard-link для CHAIN-PRODUCTION-001/002/003.** Side-effects описаны как triggers, детали делегированы в МОДУЛЬ-ФИНАНСЫ / МОДУЛЬ-ПРОИЗВОДСТВО.
 
-✅ **CHECK 6: BUSINESS-VISION grep 0.** `grep -E "WebSocket|OAuth|S3|microservice|i18n|Kubernetes"` в 4 STUB → 0 матчей (кроме negative-rules).
+✅ **CHECK 6: BUSINESS-VISION §3 grep 0.** `grep -E "WebSocket|OAuth|S3|microservice|i18n|Kubernetes|multi-tenant|CDN|ML|GraphQL|tRPC|multi-region" 02_Договор/04-pravila/*.md 02_Договор/03-zhiznennyj-cikl/*.md` → 0 матчей (кроме negative-rules секций вроде «❌ НЕ предлагать WebSocket»). Покрытие 12/27 anti-features, остальные проверяются manually при обзоре изменений.
 
 ✅ **CHECK 7: Mermaid diagram валиден по ТЗ-011 §8 #11 visual criteria.** Все 7 статусов имеют ≤1 entry arrow (DRAFT = 1 entry из [*], остальные 0), ARCHIVED + TERMINATED = 0 entries, нет orphan states, `IN_PROGRESS → TERMINATED` ОБЯЗАТЕЛЬНО.
 
