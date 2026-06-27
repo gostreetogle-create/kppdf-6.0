@@ -25,16 +25,17 @@
 
 > ⚠️ **Порядок важен** — инфраструктурные → каноны → домен → STUB-ы.
 
-### Пакет A — Агентная инфраструктура (6 файлов, ОБЯЗАТЕЛЬНО)
+### Пакет A — Агентная инфраструктура (5 файлов, ОБЯЗАТЕЛЬНО — ООМ-safe)
 
 | # | Путь | Зачем Аналитику |
 |---|---|---|
-| 1 | [`AGENT-ENTRYPOINT.md`](../../AGENT-ENTRYPOINT.md) | ~185 строк: slim master + навигация `00 → 01 → 02 → 03 → 04`. **КРИТИЧЕН** для понимания slim convention |
-| 2 | [`AGENT-METHOD.md`](../../AGENT-METHOD.md) | §1 «Быстрый старт» + §5.3 «Граница решений» (автономия) + §5.6 «Pre-action + Post-action Checkpoint» (ОБЯЗАТЕЛЬНО) + §6 (шаблон OQ) |
-| 3 | [`AGENT-ROLES.md`](../../AGENT-ROLES.md) | §2.2 **Бизнес-аналитик** (зона ответственности, проверки, чего НЕ делать) + §3 Pipeline |
-| 4 | [`AGENT-FORMAT.md`](../../AGENT-FORMAT.md) | §1 Принципы П1-П8 (нумерация правил), §5 анти-паттерны, §2.2 шаблон раздела |
-| 5 | [`AGENT-PROMPTS.md`](../../AGENT-PROMPTS.md) | §2 **канонический промпт Аналитика** (базовая 7-строчная версия; расширяется в §2 ниже) + §5 формат отчёта Координатора |
-| 6 | [`AGENT-REVIEW.md`](../../AGENT-REVIEW.md) | Самопроверка: MUST (структура, нумерация, hard limit 400) + SHOULD (edge-кейсы 3 типа) |
+| 1 | [`AGENT-METHOD.md`](../../AGENT-METHOD.md) | §1 «Быстрый старт» + §5.3 «Граница решений» (автономия) + §5.6 «Pre-action + Post-action Checkpoint» (ОБЯЗАТЕЛЬНО) + §6 (шаблон OQ) |
+| 2 | [`AGENT-ROLES.md`](../../AGENT-ROLES.md) | §2.2 **Бизнес-аналитик** (зона ответственности, проверки, чего НЕ делать) + §3 Pipeline |
+| 3 | [`AGENT-FORMAT.md`](../../AGENT-FORMAT.md) | §1 Принципы П1-П8 (нумерация правил), §5 анти-паттерны, §2.2 шаблон раздела |
+| 4 | [`AGENT-PROMPTS.md`](../../AGENT-PROMPTS.md) | §2 **канонический промпт Аналитика** (базовая 7-строчная версия; расширяется в §2 ниже) + §5 формат отчёта Координатора — **КРИТИЧЕН** для Аналитика |
+| 5 | [`AGENT-REVIEW.md`](../../AGENT-REVIEW.md) | Самопроверка: MUST (структура, нумерация, hard limit 400) + SHOULD (edge-кейсы 3 типа) |
+
+> **Зачем НЕ прикладывать AGENT-ENTRYPOINT.md (~185 строк)**: OOM risk — 18 файлов × ~200 строк ≈ ~28k tokens (safe) vs 19 включая ENTRYPOINT ≈ ~32k tokens (близко к лимиту). Навигация slim master в этом Run 2/5 менее критична — агент работает с конкретным LAUNCH-package, slim-convention объясняется через `AGENT-PROMPTS.md` §2 + `AGENT-METHOD.md` §1.
 
 ### Пакет B — Strategic + Канонический контекст (5 файлов, ОБЯЗАТЕЛЬНО)
 
@@ -64,7 +65,7 @@
 | 16 | [`02_Договор/03-zhiznennyj-cikl/03-statusy.md`](../03-zhiznennyj-cikl/03-statusy.md) | 🔴 **P0 — ТРЕТИЙ**. Ровно 7 статусов + маппинг КП ↔ Договор + negative-rules |
 | 17 | [`02_Договор/03-zhiznennyj-cikl/03-perehody.md`](../03-zhiznennyj-cikl/03-perehody.md) | 🔴 **P0 — ЧЕТВЁРТЫЙ** (4-й target!). ≥11 переходов + Mermaid stateDiagram-v2 + audit-log pattern |
 
-**Итого attach:** 19 файлов = ~3800 строк контекста. Безопасно для OOM (typical Codebuff limit ~30k tokens; 19 × ~200 строк = ~32k tokens → близко к лимиту, но допустимо).
+**Итого attach:** 18 файлов = ~3600 строк контекста ≈ ~28k tokens (safe для OOM-limit ~30k).
 
 > **НЕ прикладывать в этой сессии** (отложено, чтобы не превысить OOM):
 > `02_Договор/02-konstruktor-dogovora/*` (4 файла) — относятся к Run 2/5 но не Р0 targets. `02_Договор/00-spr/*` (4 файла) — spr data, не targets. `02_Договор/01-shablon/*` (2 файла) — shablony, не target.
@@ -414,7 +415,11 @@ git push origin main
 - **Run 3/5** (Производство) — mirror Run 2/5 по аналогичному LAUNCH-пакету. Или:
 - **Phase 1 Bootstrap actual deploy** — `pnpm install && pnpm prisma migrate dev && pnpm test && pnpm tsc` (per MASTER-VISION §4 next-step CLI).
 
-**Вариант 2 (PARALLEL, высокий throughput):** запустить **Run 3/5 Производство** в одной параллельной CODEBUFF сессии + **Phase 1 Bootstrap deploy** в другой параллельной CODEBUFF сессии — оба идут независимо, могут финишировать одновременно (24 ч wall-clock vs ~48 ч sequential).
+**Вариант 2 (PARALLEL, высокий throughput):** запустить **Phase 1 Bootstrap actual deploy** в одной параллельной CODEBUFF сессии + **Run 2/5 Договор** (= этот spawn) в другой параллельной CODEBUFF сессии — оба идут независимо, могут финишировать одновременно (~45 мин parallel vs ~60 мин sequential).
+
+> ⚠️ **НЕ запускайте Run 3/5 Производство параллельно с Run 2/5:** Run 3/5 depends на Run 2/5 (`INV-ДОГ-CHAIN-PRODUCTION-*` rules нужны как hard-link reference для Производство). Правильные parallel-пары: (a) Run 2/5 ‖ Phase 1 Bootstrap deploy (✅ can run in parallel); (b) After Run 2/5 done → Run 3/5 alone (sequential).
+
+> **Realistic estimate:** Run 2/5 Договор ≈ 15 мин processing time; Phase 1 Bootstrap (`pnpm install && pnpm prisma migrate dev && pnpm test && pnpm tsc`) ≈ 30 мин. Parallel pair → ~45 мин total. Sequential → ~45 + 15 мин = ~60 мин (small saving ~25%, NOT 24h).
 
 ---
 
@@ -430,7 +435,7 @@ git push origin main
 
 ✅ **CHECK 5: Hard-link для CHAIN-PRODUCTION-001/002/003.** Side-effects описаны как triggers, детали делегированы в МОДУЛЬ-ФИНАНСЫ / МОДУЛЬ-ПРОИЗВОДСТВО.
 
-✅ **CHECK 6: BUSINESS-VISION §3 grep 0.** `grep -E "WebSocket|OAuth|S3|microservice|i18n|Kubernetes|multi-tenant|CDN|ML|GraphQL|tRPC|multi-region" 02_Договор/04-pravila/*.md 02_Договор/03-zhiznennyj-cikl/*.md` → 0 матчей (кроме negative-rules секций вроде «❌ НЕ предлагать WebSocket»). Покрытие 12/27 anti-features, остальные проверяются manually при обзоре изменений.
+✅ **CHECK 6: BUSINESS-VISION §3 grep 0.** `grep -E "WebSocket|OAuth|S3|MinIO|microservice|i18n|Kubernetes|multi-tenant|CDN|ML|GraphQL|tRPC|multi-region|Step Functions|DocuSign|Stripe|2FA universal|multi-tier approval|Saga" 02_Договор/04-pravila/*.md 02_Договор/03-zhiznennyj-cikl/*.md` → 0 матчей (кроме negative-rules секций вроде «❌ НЕ предлагать WebSocket»). Покрытие 19/27 anti-features (MinIO для PDF / DocuSign для подписания / Stripe для оплаты / 2FA universal / multi-tier approval / Step Functions / Saga — все добавлены).
 
 ✅ **CHECK 7: Mermaid diagram валиден по ТЗ-011 §8 #11 visual criteria.** Все 7 статусов имеют ≤1 entry arrow (DRAFT = 1 entry из [*], остальные 0), ARCHIVED + TERMINATED = 0 entries, нет orphan states, `IN_PROGRESS → TERMINATED` ОБЯЗАТЕЛЬНО.
 
