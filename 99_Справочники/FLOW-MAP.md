@@ -269,6 +269,244 @@ SHIPMENT.Delivered → клиент использовал товар → обн
 
 ---
 
+## 3.4 Mermaid: Order trigger detail (СПОР-5)
+
+> **Источник:** `МОДУЛЬ-ФИНАНСЫ.md` §4, `СПОРНЫЕ-МОМЕНТЫ.md` СПОР-5.
+
+```mermaid
+flowchart TD
+    subgraph КП ["Модуль КП"]
+        KP_SENT["КП SENT<br/>отправлен клиенту"]
+        KP_ACCEPTED["КП ACCEPTED<br/>клиент принял"]
+        KP_CONVERTED["КП CONVERTED<br/>сконвертировано в Договор"]
+        KP_PAID["КП PAID<br/>оплачено"]
+    end
+
+    subgraph ДОГОВОР ["Модуль Договор"]
+        D_DRAFT["Договор DRAFT<br/>создан из КП"]
+        D_SENT["Договор SENT<br/>отправлен клиенту"]
+        D_SIGNED["Договор SIGNED<br/>подписан клиентом"]
+    end
+
+    subgraph ФИНАНСЫ ["Модуль Финансы"]
+        ORDER_DRAFT["Order DRAFT<br/>авто-создан"]
+        ORDER_IN_PROGRESS["Order IN_PROGRESS<br/>авто-переход"]
+        INVOICE["Invoice ISSUED<br/>счёт выставлен"]
+        PAYMENT["Payment INCOMING<br/>оплата получена"]
+        ORDER_CLOSED["Order CLOSED<br/>все оплачены"]
+    end
+
+    KP_SENT -->|"клиент принять"| KP_ACCEPTED
+    KP_ACCEPTED -->|"конвертировать"| KP_CONVERTED
+    KP_CONVERTED --> D_DRAFT
+    D_DRAFT -->|"отправить"| D_SENT
+    D_SENT -->|"клиент подписать"| D_SIGNED
+
+    D_SIGNED -->|"СПОР-5: авто"| ORDER_DRAFT
+    ORDER_DRAFT -->|"авто"| ORDER_IN_PROGRESS
+    ORDER_IN_PROGRESS -->|"бухгалтер"| INVOICE
+    INVOICE -->|"клиент платит"| PAYMENT
+    PAYMENT -->|"зачислить"| ORDER_IN_PROGRESS
+    ORDER_IN_PROGRESS -->|"все Invoice paid"| ORDER_CLOSED
+
+    KP_PAID -->|"авто"| ZK["ЗК CREATED<br/>(Производство)"]
+
+    style D_SIGNED fill:#4CAF50,color:#fff
+    style ORDER_DRAFT fill:#2196F3,color:#fff
+    style ORDER_CLOSED fill:#4CAF50,color:#fff
+    style KP_PAID fill:#FF9800,color:#fff
+```
+
+**Caption:** Автоматическое создание Order при подписании Договора (СПОР-5). Order создаётся в `DRAFT` → авто `IN_PROGRESS`. Параллельно при оплате КП создаётся ЗК в Производстве.
+
+---
+
+## 3.5 Mermaid: Refund flow (СПОР-12)
+
+> **Источник:** `МОДУЛЬ-ФИНАНСЫ.md` §6+§10, `СПОРНЫЕ-МОМЕНТЫ.md` СПОР-12.
+
+```mermaid
+flowchart TD
+    subgraph ПРИЧИНА ["Причина Refund"]
+        ZK_CANCELLED["ЗК CANCELLED<br/>отменён производством"]
+        CLIENT_RETURN["Клиент вернул товар<br/>(v2)"]
+        ERROR_PAYMENT["Ошибка в Payment<br/>(v1: сторно)"]
+    end
+
+    subgraph REFUND_FLOW ["Refund flow"]
+        accountant["Бухгалтер<br/>создаёт Refund"]
+        REFUND_DRAFT["Refund DRAFT<br/>amount > 0"]
+        director_approve{"Сумма > 50 000 ₽?"}
+        REFUND_APPROVED["Refund APPROVED"]
+        REFUND_COMPLETED["Refund COMPLETED<br/>деньги возвращены"]
+    end
+
+    subgraph ЭФФЕКТ ["Эффект на документы"]
+        ORDER_CANCELLED["Order → CANCELLED"]
+        KP_PAID_STAYS["КП остаётся PAID<br/>СПОР-12: не ретро-менять"]
+        CONTRACT_TERMINATED["Договор → TERMINATED"]
+        STORNO["Payment.type=STORNO<br/>amount < 0"]
+    end
+
+    ZK_CANCELLED --> accountant
+    CLIENT_RETURN --> accountant
+    ERROR_PAYMENT --> STORNO
+
+    accountant --> REFUND_DRAFT
+    REFUND_DRAFT --> director_approve
+    director_approve -->|"Да"| REFUND_APPROVED
+    director_approve -->|"Нет"| accountant
+    REFUND_APPROVED --> REFUND_COMPLETED
+
+    REFUND_COMPLETED --> ORDER_CANCELLED
+    REFUND_COMPLETED --> KP_PAID_STAYS
+    REFUND_COMPLETED --> CONTRACT_TERMINATED
+
+    STORNO -->|"correctsPaymentId"| ORDER_CANCELLED
+
+    style ZK_CANCELLED fill:#f44336,color:#fff
+    style REFUND_COMPLETED fill:#4CAF50,color:#fff
+    style KP_PAID_STAYS fill:#FF9800,color:#fff
+    style STORNO fill:#9C27B0,color:#fff
+```
+
+**Caption:** Refund flow — от отмены ЗК до возврата денег. СПОР-12: КП остаётся `PAID` (финальный статус). Refund ≠ Storno (GAP-023).
+
+---
+
+## 3.6 Mermaid: Cross-module happy path (высокий уровень)
+
+> **Источник:** `МОДУЛЬ-ФИНАНСЫ.md` §4, `МОДУЛЬ-ПРОИЗВОДСТВО.md` §5, `МОДУЛЬ-СКЛАД-ПОДРОБНЫЙ.md` §11.
+
+```mermaid
+flowchart LR
+    KP["КП<br/>MANAGER"]
+    CONTRACT["Договор<br/>MANAGER"]
+    ORDER["Order<br/>ФИНАНСЫ"]
+    ZK["ЗК<br/>ПРОИЗВОДСТВО"]
+    STOCK_IN["Приход<br/>СКЛАД"]
+    SHIPMENT["Отгрузка<br/>СКЛАД"]
+    STOCK_OUT["Расход<br/>СКЛАД"]
+    INVOICE["Invoice<br/>ФИНАНСЫ"]
+    PAYMENT["Payment<br/>ФИНАНСЫ"]
+    CLOSED["Order CLOSED<br/>МАРЖА"]
+
+    KP -->|"конвертировать"| CONTRACT
+    CONTRACT -->|"подписан → авто"| ORDER
+    KP -->|"оплачено → авто"| ZK
+    ZK -->|"завершён → авто"| STOCK_IN
+    STOCK_IN -->|"кладовщик"| SHIPMENT
+    SHIPMENT -->|"shipped → авто"| STOCK_OUT
+    SHIPMENT -->|"delivered"| ORDER
+    ORDER -->|"бухгалтер"| INVOICE
+    INVOICE -->|"клиент"| PAYMENT
+    PAYMENT -->|"все paid"| CLOSED
+
+    style KP fill:#FF9800,color:#fff
+    style CONTRACT fill:#2196F3,color:#fff
+    style ORDER fill:#4CAF50,color:#fff
+    style ZK fill:#9C27B0,color:#fff
+    style CLOSED fill:#4CAF50,color:#fff
+```
+
+**Caption:** Полный cross-module happy path: КП → Договор → Order → ЗК → Склад → Invoice → Payment → Closed. Автоматические триггеры помечены стрелками «→ авто».
+
+---
+
+## 3.4 Mermaid-диаграммы (cross-module потоки)
+
+### Diagram 1: High-level — 5 модулей и их статусы
+
+> **Источник:** `ФЛОВ-МАП` §1 + `МОДУЛЬ-ФИНАНСЫ.md` §4 + `СПОРНЫЕ-МОМЕНТЫ.md` все 15.
+
+```mermaid
+flowchart LR
+    subgraph KP["01_КП"]
+        D1[DRAFT] -->|отправлено| S1[SENT]
+        S1 -->|принято| A1[ACCEPTED]
+        A1 -->|оплачено → авто ЗК| P1[PAID]
+        A1 -->|конвертация| C1[CONVERTED]
+    end
+
+    subgraph DOG["02_Договор"]
+        D2[DRAFT] -->|отправлен| S2[SENT]
+        S2 -->|подписан → авто Order| SIG[SIGNED]
+        SIG -->|завершён| CO2[COMPLETED]
+        SIG -->|отмена ЗК| T2[TERMINATED]
+    end
+
+    subgraph PR["03_Производство"]
+        CR[CREATED] -->|планирование| PL[PLANNING]
+        PL -->|в работу| IP[IN_PROGRESS]
+        IP -->|завершён → авто приход Склад| CO3[COMPLETED]
+        IP -->|отмена| CA[CANCELLED]
+    end
+
+    subgraph SK["04_Склад"]
+        SH[PLANNED] -->|упакован| PA[PACKED]
+        PA -->|отгружен → авто StockMvmt OUT| SH2[SHIPPED]
+        SH2 -->|доставлен| DE[DELIVERED]
+    end
+
+    subgraph FI["05_Финансы"]
+        OD[DRAFT] -->|авто от Order| IP2[IN_PROGRESS]
+        IP2 -->|все Invoice оплачены| CL[CLOSED]
+        IP2 -->|отмена| CN[CANCELLED]
+    end
+
+    P1 -.->|авто ЗК| CR
+    SIG -.->|авто Order| OD
+    CO3 -.->|авто StockMvmt IN| SK
+    DE -.->|OrderClosing.progress++| FI
+```
+
+> *Caption: High-level карта 5 модулей с триггерами автоматических переходов между ними. Стрелки `-.->` = авто-триггеры, `-->` = ручные переходы.*
+
+### Diagram 2: Order trigger detail (СПОР-5)
+
+> **Источник:** `СПОРНЫЕ-МОМЕНТЫ.md` СПОР-5 + `МОДУЛЬ-ФИНАНСЫ.md` §4.
+
+```mermaid
+flowchart TD
+    A["Contract.status = SIGNED<br/>(клиент подписал)"] --> B{"Есть parentProposalId?"}
+    B -->|Да| C["Читаем Proposal.items<br/>(snapshot)"]
+    B -->|Нет| ERR["❌ Ошибка: Договор без КП"]
+    C --> D["Создаём Order<br/>status = DRAFT"]
+    D --> E["Копируем позиции<br/>ContractItem → OrderItem"]
+    E --> F["Order.status → IN_PROGRESS<br/>(авто)"]
+    F --> G["Бухгалтер выставляет Invoice"]
+    G --> H["Клиент платит → Payment"]
+    H --> I["Invoice → FULLY_PAID"]
+    I --> J{"Все Invoice оплачены?"}
+    J -->|Да| K["Order → CLOSED<br/>Маржа рассчитана"]
+    J -->|Нет| L["Order → AWAITING_PAYMENT"]
+```
+
+> *Caption: Детальная схема триггера создания Order при подписании Договора (СПОР-5). Все шаги автоматические除了 Invoice/Payment.*
+
+### Diagram 3: Refund сценарий (СПОР-12)
+
+> **Источник:** `СПОРНЫЕ-МОМЕНТЫ.md` СПОР-12 + `МОДУЛЬ-ФИНАНСЫ.md` §6.
+
+```mermaid
+flowchart TD
+    A["ЗК-XXXX отменён<br/>(Орлов нажал «Отменить»)"] --> B["КП остаётся<br/>status = PAID<br/>(СПОР-12)"]
+    A --> C["Order-XXXX<br/>status = IN_PROGRESS"]
+    C --> D{"Была отгрузка?"}
+    D -->|Да: частичная| E["Refund =<br/>paidAmount −<br/>стоимость отгрузки"]
+    D -->|Нет| F["Refund =<br/>paidAmount"]
+    D -->|Полная| F
+    E --> G["Refund.amount ≤<br/>Payment.amount<br/>(инвариант §6.2)"]
+    F --> G
+    G --> H["Order.paidAmount<br/>пересчитан"]
+    H --> I["Order → CANCELLED"]
+    I --> J["Договор → TERMINATED<br/>(авто)"]
+```
+
+> *Caption: Схема возврата денег при отмене ЗК после оплаты (СПОР-12). КП остаётся «Оплачено» — ретро-менять ЗАПРЕЩЕНО.*
+
+---
+
 ## 4. R1-R4 (4 архитектурных разрыва — все разрешены)
 
 | # | Разрыв (R) | Решение (24.06.2026) |

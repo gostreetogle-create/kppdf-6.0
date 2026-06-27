@@ -1,0 +1,37 @@
+# 04_Склад/00-spr/ — Справочники модуля «Склад»
+
+> ⚠️ **STUB.** Создан декомпозицией модуля `04_Склад` (см. [MODULE-DECOMPOSITION-PLAN.md §4](../../99_Справочники/MODULE-DECOMPOSITION-PLAN.md)). Контент будет наполнен Аналитиком в **Run 4 / 5 Аналитик Склад** (ТЗ-009).
+
+## Назначение
+
+Папка фундаментальных справочников модуля `Склад` — глоссарий, склады, поставщики, товары (SKU/minStock), клиенты (владельцы остатков), out-of-scope, открытые вопросы. Используется как **единственный источник истины** для всех downstream-документов (СД/ОТК/АС/ЗП, StockRecord, StockMovement).
+
+## Структура папки
+
+| Файл | Назначение | Объём (план) |
+|---|---|---|
+| `00-README.md` | Точка входа папки (этот файл) | ~50 строк |
+| `00-glossary.md` | Глоссарий терминов Склада (Warehouse, StockRecord, StockMovement, Reservation, PurchaseRequest, SupplierDelivery, Shipment, WriteOffAct, PurchaseOrder, availableQty, minStock, snapshot) | ~100 строк |
+| `00-orgs.md` | Склады (Warehouse) физические + Suppliers (Organization.isSupplier=true) | ~80 строк |
+| `00-products.md` | SKU-система, minStock, категории товаров | ~80 строк |
+| `00-clients.md` | Кому принадлежат остатки (customerId в SupplierDelivery/Shipment) | ~60 строк |
+| `00-out-of-scope.md` | Что НЕ входит (mobile scanner, штрих-коды, multi-currency, ML-прогноз) | ~80 строк |
+| `00-otkrytye-voprosy.md` | **5 baseline открытых вопросов** для Run 4 Аналитика | ~120 строк |
+
+## Принципы наполнения (Аналитик Run 4)
+
+1. **Два источника:** МОДУЛЬ-СКЛАД-ПОДРОБНЫЙ.md (§0–§4 для базовых 5 сущностей, §5–§8 для 4 НОВЫХ) + МОДУЛЬ-СКЛАД-UI.md (§0 для пользовательских терминов). Термины должны совпадать с `GLOSSARY-MASTER.md`.
+2. **Snapshot semantics:** все поля на момент операции — фиксируются. Изменения в Product/Organization НЕ влияют на старые документы.
+3. **Sealed counters:** каждый префикс (СД/ОТК/АС/ЗП) имеет отдельный счётчик (СПОР-13).
+4. **RUB жёстко в v1** (СПОР-14).
+5. **5 baseline OQ** уже стоят в `00-otkrytye-voprosy.md` — новые → `OPEN-QUESTIONS-MASTER.md`.
+
+## Связанные документы
+
+- [`../../01_КП/00-spr/00-README.md`](../../01_КП/00-spr/00-README.md) — зеркальный entrypoint для КП.
+- [`../МОДУЛЬ-СКЛАД-ПОДРОБНЫЙ.md`](../МОДУЛЬ-СКЛАД-ПОДРОБНЫЙ.md) — основной источник (V0).
+- [`../МОДУЛЬ-СКЛАД-UI.md`](../МОДУЛЬ-СКЛАД-UI.md) — UI-каркасы (V0).
+- [`../../99_Справочники/MODULE-DECOMPOSITION-PLAN.md`](../../99_Справочники/MODULE-DECOMPOSITION-PLAN.md) §4 — план декомпозиции.
+- [`../../99_Справочники/GLOSSARY-MASTER.md`](../../99_Справочники/GLOSSARY-MASTER.md) — общий глоссарий проекта.
+
+> **Hard limit:** файлы STUB ≤ 250 строк. Hard limit папки ≤ 700 строк суммарно.

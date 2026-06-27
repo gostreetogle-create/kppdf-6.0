@@ -1,5 +1,13 @@
 # ТЗ-004-PHASE-1-BOOTSTRAP-PRISMA.md — Phase 1 Bootstrap миграций Prisma из kppdf-5.0
 
+> ## 🔒 FINALIZED 2026-06-27T12:50:00Z
+>
+> **Агент:** MiMo Code Agent (mimo-auto)
+> **Verdict:** ✅ CLOSED
+> **Source ТЗ:** 99_Справочники/TASKS/ТЗ-004-PHASE-1-BOOTSTRAP-PRISMA.md
+> **Closure report:** 99_Справочники/TASKS/ТЗ-004_02-CLOSURE-REPORT.md
+> **Заблокировано для дальнейших правок без нового PSL-NNN.**
+
 > **Тип документа:** Техническое задание (ТЗ) для параллельного ИИ-агента.
 > **ID задачи:** ТЗ-004.
 > **Приоритет:** 🔴 P0 (блокер для Phase 2 Mantine UI + RBAC-middleware).

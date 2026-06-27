@@ -1,0 +1,976 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+// ----------------------------------------------------------------------------
+// Cycle v3.4 — FINAL migration to PostgreSQL.
+//
+// Project originally used PostgreSQL, was reverted to SQLite in Cycle v3.1.1
+// due to SCRAM auth misconfiguration. The SCRAM issue is now resolved by:
+//   1. Using pg.Pool directly through @prisma/adapter-pg
+//   2. SSL: sslmode=require on prod, sslmode=disable on dev
+//   3. pg_hba.conf: host all all 127.0.0.1/32 md5
+//
+// NO SQLITE. NO FALLBACK. ONLY POSTGRESQL.
+// Schema is production-ready with all 47 models.
+// ----------------------------------------------------------------------------
+datasource db {
+  provider = "postgresql"
+}
+
+// ========================================
+// COUNTER (автоинкремент номеров документов)
+// ========================================
+
+model Counter {
+  id    String @id @default(cuid())
+  name  String @unique  // 'proposal', 'contract', 'invoice', etc.
+  value Int    @default(0)
+}
+
+// ========================================
+// AUTH
+// ========================================
+
+model User {
+  id                 String   @id @default(cuid())
+  username           String   @unique
+  password           String
+  displayName        String
+  email              String?
+  phone              String?
+  role               String   @default("viewer") // admin | manager | production | storekeeper | accountant | viewer
+  isActive           Boolean  @default(true)
+  refreshTokenVersion Int    @default(0)  // Инкрементируется при каждой выдаче refresh token
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+
+  @@index([username])
+  @@index([role])
+
+  comments     Comment[]
+}
+
+// ========================================
+// REFERENCE DATA
+// ========================================
+
+model Organization {
+  id               String   @id @default(cuid())
+  name             String
+  shortName        String   @default("")
+  legalForm        String   @default("")
+  inn              String   @default("")
+  kpp              String   @default("")
+  ogrn             String   @default("")
+  phone            String   @default("")
+  email            String   @default("")
+  legalAddress     String   @default("")
+  postalAddress    String   @default("")
+  bankName         String   @default("")
+  bankBik          String   @default("")
+  bankAccount      String   @default("")
+  signerName       String   @default("")
+  signerPosition   String   @default("")
+  contactPerson    String   @default("")
+  paymentTermDays  Int      @default(0)
+  vatRate          Float    @default(20)
+  isActive         Boolean  @default(true)
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  // Cycle 54 (B.2): discriminator for counterparty type.
+  // Влияет на правила валидации в src/lib/validations/organization.ts (Zod DU):
+  //   legal       — ООО/ОАО/ЗАО/ПАО: ИНН 10 цифр, КПП 9 цифр, ОГРН 13 цифр
+  //   entrepreneur — ИП:                 ИНН 12 цифр, ОГРН 15 цифр, без КПП
+  //   individual  — Физ.лицо:           ИНН 12 цифр optional, без КПП/ОГРН
+  // Default 'legal' для backward-compat: существующие записи получают 'legal'
+  // (все имеющие ИНН/КПП/ОГРН в БД). Миграция: ADD COLUMN ... DEFAULT 'legal'.
+  type             String   @default("legal") // legal | entrepreneur | individual
+
+  roles            OrgRole[]
+  proposals        Proposal[] @relation("ProposalOrg")
+  contracts        Contract[] @relation("ContractOrg")
+  customerForProposals  Proposal[] @relation("ProposalCustomer")
+  customerForContracts  Contract[] @relation("ContractCustomer")
+  // Цикл доработки: контактные лица организации (Person)
+  contacts         OrganizationContact[]
+  // Цикл доработки: материалы, поставляемые этой организацией
+  suppliedMaterials Material[]
+
+  @@index([name])
+  @@index([inn])
+  @@index([type])  // fast filter by counterparty type
+}
+
+model OrgRole {
+  id             String       @id @default(cuid())
+  name           String
+  slug           String       @unique
+  description    String       @default("")
+  isActive       Boolean      @default(true)
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+
+  organizations  Organization[]
+
+  @@index([slug])
+}
+
+// ========================================
+// PERSONS (контактные лица)
+// ========================================
+
+model Person {
+  id          String   @id @default(cuid())
+  lastName    String
+  firstName   String
+  patronymic  String?
+  phone       String   @default("")
+  email       String?
+  position    String?  // Должность в организации
+  notes       String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  organizations OrganizationContact[]
+
+  @@index([lastName, firstName])
+}
+
+model OrganizationContact {
+  id             String       @id @default(cuid())
+  organizationId String
+  personId       String
+
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  person         Person       @relation(fields: [personId], references: [id], onDelete: Cascade)
+
+  @@unique([organizationId, personId])
+  @@index([organizationId])
+  @@index([personId])
+}
+
+// ========================================
+// MATERIALS (глобальный справочник)
+// ========================================
+
+model Material {
+  id          String   @id @default(cuid())
+  name        String
+  article     String?  @unique
+  unit        String   @default("шт")
+  description String?
+  price       Float?
+  image       String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Привязка к поставщику (организация с ролью «Поставщик»)
+  supplierId  String?
+  supplier    Organization? @relation(fields: [supplierId], references: [id], onDelete: SetNull)
+
+  // Категория материала
+  categoryId  String?
+  category    MaterialCategory? @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+
+  @@index([name])
+  @@index([article])
+  @@index([supplierId])
+}
+
+model MaterialCategory {
+  id        String     @id @default(cuid())
+  name      String
+  slug      String     @unique
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+
+  materials Material[]
+}
+
+// ========================================
+// PRODUCTS
+// ========================================
+
+model ProductCategory {
+  id          String   @id @default(cuid())
+  name        String
+  prefix      String   @default("")
+  description String?
+  sortOrder   Int      @default(0)
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  products    Product[]
+
+  @@index([prefix])
+}
+
+model Product {
+  id                    String   @id @default(cuid())
+  sku                   String   @unique
+  name                  String
+  description           String?
+  productType           String   @default("purchased") // purchased | manufactured
+  basePrice             Float    @default(0)
+  defaultMarkupPercent  Float    @default(0)
+  unit                  String   @default("шт")
+  weightKg              Float?
+  dimensions            String?
+  material              String?
+  hasPassport           Boolean  @default(false)
+  hasDrawing            Boolean  @default(false)
+  ralCode               String?  // Цвет покраски по RAL
+  isActive              Boolean  @default(true)
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+
+  categoryId            String?
+  category              ProductCategory? @relation(fields: [categoryId], references: [id])
+
+  photos                ProductPhoto[]
+  components            ProductComponent[]
+  modules               ProductModule[]
+  cartItems             CartItem[]
+  proposalItems         ProposalItem[]
+  storageItems          StorageItem[]
+
+  @@index([sku])
+  @@index([name])
+  @@index([categoryId])
+}
+
+model ProductPhoto {
+  id        String   @id @default(cuid())
+  url       String
+  caption   String?
+  isMain    Boolean  @default(false)
+  sortOrder Int      @default(0)
+  createdAt DateTime @default(now())
+
+  productId String
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@index([productId])
+}
+
+model ProductComponent {
+  id        String @id @default(cuid())
+  name      String
+  material  String?
+  quantity  Float  @default(1)
+  unit      String @default("шт")
+  workTypeId String?
+
+  productId String
+  product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@index([productId])
+}
+
+// ========================================
+// PRODUCT MODULES
+// ========================================
+
+model ProductModule {
+  id          String   @id @default(cuid())
+  name        String
+  article     String?
+  width       Float?
+  height      Float?
+  depth       Float?
+  weight      Float?
+  image       String?
+  sortOrder   Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Цикл доработки: productId опционально — модуль может быть независимым шаблоном
+  productId   String?
+  product     Product? @relation(fields: [productId], references: [id], onDelete: SetNull)
+
+  workTypes   ModuleWorkType[]
+  materials   ModuleMaterial[]
+
+  @@index([productId])
+}
+
+model ModuleWorkType {
+  id              String  @id @default(cuid())
+  estimatedHours  Float
+  sortOrder       Int     @default(0)
+
+  moduleId        String
+  module          ProductModule @relation(fields: [moduleId], references: [id], onDelete: Cascade)
+  workTypeId      String
+  workType        WorkType     @relation(fields: [workTypeId], references: [id])
+
+  @@index([moduleId])
+  @@index([workTypeId])
+}
+
+model ModuleMaterial {
+  id            String   @id @default(cuid())
+  name          String
+  quantity      Float    @default(1)
+  unit          String   @default("шт")
+  isPurchased   Boolean  @default(true)
+
+  moduleId      String
+  module        ProductModule @relation(fields: [moduleId], references: [id], onDelete: Cascade)
+
+  @@index([moduleId])
+}
+
+// ========================================
+// CART & PROPOSALS
+// ========================================
+
+model CartItem {
+  id              String @id @default(cuid())
+  quantity        Int    @default(1)
+  priceSnapshot   Float
+  markupPercent   Float?
+
+  productId String
+  product   Product @relation(fields: [productId], references: [id])
+
+  sessionId String
+  session   CartSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+}
+
+model CartSession {
+  id        String     @id @default(cuid())
+  createdAt DateTime   @default(now())
+  items     CartItem[]
+}
+
+model Proposal {
+  id           String   @id @default(cuid())
+  number       String
+  title        String
+  status       String   @default("draft") // draft | sent | accepted | rejected | converted | paid
+  customerId   String?
+  customer     Organization? @relation("ProposalCustomer", fields: [customerId], references: [id])
+  organizationId String?
+  organization Organization? @relation("ProposalOrg", fields: [organizationId], references: [id])
+  templateId   String?
+  markupPercent Float    @default(0)
+  discountPercent Float @default(0)
+  vatRate      Float    @default(20)
+  ralCode      String?  // Цвет покраски по RAL (из товара, но можно переопределить)
+  notes        String?
+  validUntil   DateTime?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  // Cycle 42 — Версионирование КП (Block 3.2)
+  parentProposalId String?
+  parentProposal   Proposal?  @relation("ProposalVersions", fields: [parentProposalId], references: [id], onDelete: SetNull)
+  childVersions    Proposal[] @relation("ProposalVersions")
+  version          Int        @default(1)
+  supersededAt     DateTime?
+
+  items        ProposalItem[]
+  contract     Contract?
+  productionOrders ProductionOrder[]
+
+  packageTag   String?  // Migration E: виртуальная Картотека сделок
+
+  @@unique([number, version])  // CRITICAL: composite unique — иначе multi-versioning крашится
+  @@unique([parentProposalId, version])  // Cycle 43: race protection — не более одной v2/v3... от одного parent
+  @@index([number])
+  @@index([status])
+  @@index([parentProposalId])  // fast lineage lookup
+  @@index([packageTag])
+}
+
+model ProposalItem {
+  id              String   @id @default(cuid())
+  quantity        Int      @default(1)
+  unitPrice       Float
+  markupPercent   Float    @default(0)
+  total           Float    @default(0)
+  sortOrder       Int      @default(0)
+
+  productId String?
+  product   Product? @relation(fields: [productId], references: [id])
+
+  proposalId String
+  proposal   Proposal @relation(fields: [proposalId], references: [id], onDelete: Cascade)
+
+  // Cycle 42 — Версионирование КП (Block 3.2): lineage self-FK
+  // sourceItem указывает на immediate parent в lineage (v3 → v2, v4 → v3)
+  sourceItemId  String?
+  sourceItem    ProposalItem?  @relation("ItemLineage", fields: [sourceItemId], references: [id], onDelete: SetNull)
+  derivedItems  ProposalItem[] @relation("ItemLineage")
+
+  @@index([proposalId])
+  @@index([sourceItemId])  // 🚀 fast lineage lookup
+}
+
+// ========================================
+// CONTRACTS
+// ========================================
+
+model Contract {
+  id           String   @id @default(cuid())
+  number       String   @unique
+  title        String
+  status       String   @default("draft") // draft | active | completed | cancelled
+  customerId   String?
+  customer     Organization? @relation("ContractCustomer", fields: [customerId], references: [id])
+  organizationId String?
+  organization Organization? @relation("ContractOrg", fields: [organizationId], references: [id])
+  proposalId   String?  @unique
+  proposal     Proposal? @relation(fields: [proposalId], references: [id])
+  totalAmount  Float    @default(0)
+  signedAt     DateTime?
+  expiresAt    DateTime?
+  notes        String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  items        ContractItem[]
+  productionOrders ProductionOrder[]
+
+  packageTag   String?  // Migration E: виртуальная Картотека сделок
+
+  @@index([number])
+  @@index([status])
+  @@index([packageTag])
+}
+
+model ContractItem {
+  id            String   @id @default(cuid())
+  name          String
+  quantity      Int?
+  unit          String   @default("шт")
+  unitPrice     Float?
+  priceSnapshot Float?   // Migration A: снапшот цены на момент создания Договора. NULL для рамочных.
+  total         Float    @default(0)
+  sortOrder     Int      @default(0)
+
+  contractId String
+  contract   Contract @relation(fields: [contractId], references: [id], onDelete: Cascade)
+
+  @@index([contractId])
+}
+
+// ========================================
+// PRODUCTION
+// ========================================
+
+model WorkType {
+  id          String   @id @default(cuid())
+  name        String
+  description String?
+  hourlyRate  Float    @default(0)
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  orders      ProductionOrder[]
+  tasks       OrderTask[]
+  moduleWorkTypes ModuleWorkType[]
+}
+
+model WorkCenter {
+  id          String   @id @default(cuid())
+  name        String
+  description String?
+  capacity    Int      @default(1)
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  orders      ProductionOrder[]
+  tasks       OrderTask[]
+
+  @@index([name])
+}
+
+model Worker {
+  id          String   @id @default(cuid())
+  firstName   String
+  lastName    String
+  phone       String?
+  role        String   @default("worker")
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  tasks       OrderTask[]
+}
+
+model ProductionOrder {
+  id          String   @id @default(cuid())
+  number      String   @unique
+  title       String
+  status      String   @default("planned") // planned | in_progress | completed | cancelled
+  priority    Int      @default(0)
+  plannedStart DateTime?
+  plannedEnd   DateTime?
+  actualStart  DateTime?
+  actualEnd    DateTime?
+  ralCode      String?  // Цвет покраски по RAL (из КП, но можно переопределить)
+  notes       String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  workTypeId  String?
+  workType    WorkType? @relation(fields: [workTypeId], references: [id])
+  workCenterId String?
+  workCenter   WorkCenter? @relation(fields: [workCenterId], references: [id])
+
+  // Связи с документами-источниками
+  contractId  String?
+  contract    Contract? @relation(fields: [contractId], references: [id])
+  proposalId  String?
+  proposal    Proposal? @relation(fields: [proposalId], references: [id])
+
+  tasks       OrderTask[]
+
+  // Cycle 53 (B.1): обратная связь для InventoryMovement.productionOrder.
+  inventoryMovements InventoryMovement[]
+
+  // Cycle 56 (B.5): reverse relation to OrderClosing (audit trail).
+  orderClosings OrderClosing[]
+
+  @@index([number])
+  @@index([status])
+  @@index([contractId])
+  @@index([proposalId])
+
+  packageTag   String?  // Migration E: виртуальная Картотека сделок
+  @@index([packageTag])
+}
+
+model OrderTask {
+  id          String   @id @default(cuid())
+  title       String
+  description String?
+  status      String   @default("pending") // pending | in_progress | completed | blocked
+  estimatedHours Float?
+  actualHours Float?
+  plannedStart DateTime?
+  plannedEnd   DateTime?
+  actualStart  DateTime?
+  actualEnd    DateTime?
+  sortOrder   Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  orderId     String
+  order       ProductionOrder @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+  workTypeId  String?
+  workType    WorkType? @relation(fields: [workTypeId], references: [id])
+
+  workCenterId String?
+  workCenter   WorkCenter? @relation(fields: [workCenterId], references: [id])
+
+  workerId    String?
+  worker      Worker? @relation(fields: [workerId], references: [id])
+
+  @@index([orderId])
+  @@index([status])
+  @@index([workerId])
+  @@index([workCenterId])
+}
+
+// ========================================
+// WAREHOUSE
+// ========================================
+
+model Warehouse {
+  id          String   @id @default(cuid())
+  name        String
+  address     String?
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  storageItems StorageItem[]
+}
+
+model StorageItem {
+  id          String   @id @default(cuid())
+  quantity    Int      @default(0)
+  reservedQty Int      @default(0)
+  minQuantity Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  warehouseId String
+  warehouse   Warehouse @relation(fields: [warehouseId], references: [id])
+
+  productId String?
+  product   Product? @relation(fields: [productId], references: [id])
+
+  inventoryMovements InventoryMovement[]
+
+  @@unique([warehouseId, productId])
+}
+
+model InventoryMovement {
+  id              String   @id @default(cuid())
+  type            String   // in | out | transfer
+  quantity        Int
+  notes           String?
+  createdAt       DateTime @default(now())
+
+  storageItemId String
+  storageItem   StorageItem @relation(fields: [storageItemId], references: [id])
+
+  // Cycle 53 (B.1): FK to ProductionOrder для авто-IN при completed.
+  // Nullable: ручные IN/OUT/transfer не привязаны к заказу.
+  // onDelete SetNull: если заказ удаляется — movement сохраняется как historical record.
+  productionOrderId String?
+  productionOrder   ProductionOrder? @relation(fields: [productionOrderId], references: [id], onDelete: SetNull)
+
+  // Race protection: один IN на (order, storageItem, type).
+  // Позволяет отдельные OUT для возврата материалов на тот же заказ.
+  @@unique([productionOrderId, storageItemId, type])
+  @@index([storageItemId])
+  @@index([productionOrderId])
+}
+
+model PurchaseRequest {
+  id          String   @id @default(cuid())
+  number      String   @unique
+  title       String
+  status      String   @default("draft") // draft | approved | ordered | received | cancelled
+  totalAmount Float    @default(0)
+  notes       String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  items       PurchaseRequestItem[]
+}
+
+model PurchaseRequestItem {
+  id          String @id @default(cuid())
+  name        String
+  quantity    Int
+  unit        String @default("шт")
+  unitPrice   Float  @default(0)
+  total       Float  @default(0)
+
+  requestId String
+  request   PurchaseRequest @relation(fields: [requestId], references: [id], onDelete: Cascade)
+}
+
+model SupplierOrder {
+  id              String   @id @default(cuid())
+  number          String   @unique
+  title           String
+  status          String   @default("draft") // draft | confirmed | shipped | delivered | cancelled
+  supplierId      String?
+  totalAmount     Float    @default(0)
+  deliveryDate    DateTime?
+  notes           String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  items           SupplierOrderItem[]
+}
+
+model SupplierOrderItem {
+  id          String @id @default(cuid())
+  name        String
+  quantity    Int
+  unit        String @default("шт")
+  unitPrice   Float  @default(0)
+  total       Float  @default(0)
+
+  orderId String
+  order   SupplierOrder @relation(fields: [orderId], references: [id], onDelete: Cascade)
+}
+
+model IncomingInvoice {
+  id           String   @id @default(cuid())
+  number       String   @unique
+  supplierId   String?
+  totalAmount  Float    @default(0)
+  status       String   @default("draft") // draft | paid | overdue
+  invoiceDate  DateTime @default(now())
+  dueDate      DateTime?
+  notes        String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
+
+// ========================================
+// SHIPPING (ОТГРУЗКА)
+// ========================================
+
+model Shipment {
+  id          String   @id @default(cuid())
+  number      String   @unique
+  orderId     String?
+  status      String   @default("draft") // draft | partially | shipped | cancelled
+  items       String   @default("[]")    // JSON: [{ name, quantity, unit, shipped }]
+  photos      String   @default("[]")    // JSON: [{ url, caption }]
+  notes       String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([orderId])
+  @@index([status])
+}
+
+// ========================================
+// FINANCE
+// ========================================
+
+model OrderClosing {
+  id           String   @id @default(cuid())
+  number       String   @unique
+  orderId      String?
+  closingType  String   @default("full") // full | partial
+  totalAmount  Float    @default(0)
+  status       String   @default("draft") // draft | approved | completed
+  notes        String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  // Cycle 56 (B.5): FK relation to ProductionOrder.
+  // Позволяет strict audit-trail "закрытие заказа" ↔ "производственный заказ".
+  // onDelete SetNull: при удалении заказа — closing сохраняется как historical record.
+  productionOrder   ProductionOrder? @relation(fields: [orderId], references: [id], onDelete: SetNull)
+
+  @@index([orderId])
+  @@index([status])
+}
+
+model ReconciliationAct {
+  id            String   @id @default(cuid())
+  number        String   @unique
+  organizationId String?
+  periodStart   DateTime
+  periodEnd     DateTime
+  totalDebit    Float    @default(0)
+  totalCredit   Float    @default(0)
+  status        String   @default("draft") // draft | signed
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+}
+
+model FinancialReport {
+  id          String   @id @default(cuid())
+  number      String   @unique
+  reportType  String   @default("monthly") // monthly | quarterly | yearly
+  periodStart DateTime
+  periodEnd   DateTime
+  totalIncome Float    @default(0)
+  totalExpense Float   @default(0)
+  netProfit   Float    @default(0)
+  status      String   @default("draft") // draft | published
+  notes       String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+// ========================================
+// ADMIN
+// ========================================
+
+model Tender {
+  id           String   @id @default(cuid())
+  number       String   @unique
+  title        String
+  status       String   @default("draft") // draft | submitted | won | lost | cancelled
+  customerName String?
+  totalAmount  Float    @default(0)
+  deadline     DateTime?
+  notes        String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
+
+model DocType {
+  id          String   @id @default(cuid())
+  name        String
+  slug        String   @unique
+  description String?
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  templates   DocumentTemplate[]
+
+  @@index([slug])
+}
+
+model DocumentTemplate {
+  id               String   @id @default(cuid())
+  name             String
+  description      String?
+  pageSize         String   @default("A4")
+  backgroundImage  String?
+  backgroundOpacity Float   @default(1)
+  isDefault        Boolean  @default(false)
+  organizationId   String?
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  docTypeId String?
+  docType   DocType? @relation(fields: [docTypeId], references: [id])
+
+  blocks     TemplateBlock[]
+}
+
+model TemplateBlock {
+  id           String   @id @default(cuid())
+  type         String   // text | table | separator
+  order        Int      @default(0)
+  title        String?
+  content      String?
+  height       Int?
+  showLine     Boolean  @default(false)
+  settings     String?  // JSON string for flexible settings
+
+  templateId String
+  template   DocumentTemplate @relation(fields: [templateId], references: [id], onDelete: Cascade)
+
+  @@index([templateId])
+}
+
+model TableTemplate {
+  id          String   @id @default(cuid())
+  name        String
+  description String?
+  columns     String?  // JSON string for flexible column config
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model StatusWorkflow {
+  id          String   @id @default(cuid())
+  name        String
+  entity      String
+  fromStatus  String
+  toStatus    String
+  roles       String   @default("admin")
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Cycle 51 (B.3): unique constraint enforces idempotent seed migration
+  // + prevents duplicate (entity, fromStatus, toStatus) rows.
+  @@unique([entity, fromStatus, toStatus])
+  @@index([entity, fromStatus])
+}
+
+model RppEntry {
+  id          String   @id @default(cuid())
+  number      String   @unique
+  title       String
+  status      String   @default("draft")
+  notes       String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model Certificate {
+  id          String   @id @default(cuid())
+  number      String   @unique
+  title       String
+  issuer      String?
+  issuedAt    DateTime?
+  expiresAt   DateTime?
+  status      String   @default("active") // active | expired | revoked
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+// ========================================
+// ORDER HISTORY
+// ========================================
+
+model OrderHistory {
+  id        String   @id @default(cuid())
+  orderId   String
+  action    String   // created | status_changed | task_completed | task_assigned | note_added | converted
+  userId    String?
+  userName  String?
+  details   String?  // JSON with action-specific data
+  createdAt DateTime @default(now())
+
+  @@index([orderId])
+  @@index([orderId, createdAt])
+}
+
+model UserActivity {
+  id        String   @id @default(cuid())
+  userId    String
+  userName  String?
+  action    String
+  entity    String   // proposal | contract | production_order | task
+  entityId  String?
+  details   String?  // JSON
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+  @@index([entity, entityId])
+}
+
+model InventorFile {
+  id          String   @id @default(cuid())
+  filename    String
+  fileType    String   @default("dwg") // dwg | dxf | pdf
+  fileSize    Int?
+  url         String?
+  description String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model FeatureFlag {
+  id              String   @id @default(cuid())
+  key             String   @unique
+  label           String
+  description     String?
+  enabledByDefault Boolean @default(true)
+  category        String   @default("general")
+  isActive        Boolean  @default(true)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@index([key])
+}
+
+// ========================================
+// RATE LIMITING (persistent across restarts)
+// ========================================
+
+model RateLimitEntry {
+  id        String   @id @default(cuid())
+  key       String   @unique
+  count     Int      @default(1)
+  expiresAt DateTime
+
+  @@index([expiresAt])
+}
+
+// ========================================
+// Migration F: Comment (история комментариев Картотеки сделок)
+// ========================================
+
+model Comment {
+  id          Int       @id @default(autoincrement())
+  packageTag  String                          // индекс для быстрого find по Картотеке
+  authorId    String
+  author      User      @relation(fields: [authorId], references: [id], onDelete: Restrict)
+  text        String    @db.Text
+  createdAt   DateTime  @default(now())
+  isArchived  Boolean   @default(false)       // soft-delete
+
+  @@index([packageTag])
+  @@index([authorId])
+  @@index([createdAt])
+}

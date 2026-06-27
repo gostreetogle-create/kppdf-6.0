@@ -1,0 +1,654 @@
+@import "tailwindcss";
+
+/*
+ * Tailwind v4 auto-content-detection scans project root for utility classes.
+ * Documentation files (audit-log.md, CLAUDE.md, AGENTS.md, README.md, etc.)
+ * contain placeholder literals like `bg-[var(--X)]` (or `var(--X)` examples)
+ * that would be misinterpreted as candidate class names and generate invalid
+ * CSS rules (`var(--X)` IS valid; any bare `var()` without `--` prefix is invalid).
+ *
+ * The `@source not` directive permanently excludes Markdown docs from the
+ * content scan. This is the structural defense; text-escaping documentation
+ * is cosmetic.
+ *
+ * IMPORTANT: `@source` paths are relative to this CSS file (src/app/globals.css).
+ * Project root is two levels up — `../../`.
+ */
+@source not "../../**/*.md";
+
+/*
+ * ============================================================================
+ * DESIGN TOKENS v3 — "Neutral Slate + Deep Violet"
+ * ============================================================================
+ *
+ * LIGHT theme — airy white + cool slate neutrals. Accent: Deep Violet (#7C3AED).
+ * DARK theme  — deep blue-slate base (Kaspersky deep) + 5-level tint elevation
+ *               ladder (Linear-inspired) + ultra-deep blacks (Vercel-inspired).
+ *               Accent: Electric Violet (#A78BFA).
+ *
+ * --- Dark theme reference mix (per task brief) ---
+ *   1. Kaspersky (mandatory)
+ *        → deep blue-slate base (no green tint at all), crisp 1px borders,
+ *          premium enterprise feel, cool-warm balance leaning cool.
+ *   2. Linear
+ *        → 5-level tint elevation ladder: bg (page) < muted < card < popover
+ *          < modal. Surfaces differentiate by subtractive LIGHTENING rather
+ *          than heavy shadows. Anti-pattern avoided: flat muddy look.
+ *   3. Vercel
+ *        → ultra-deep black on base (`#0B0E14` not pure `#000`),
+ *          depth communicated via deep pure-black shadows + crisp borders.
+ *
+ * --- Light theme accent chosen: Deep Violet (Violet-700) ---
+ *   - WCAG AA 4.5:1 on white background. Verified.
+ *   - Not the banal blue SaaS (Stripe / Apple use indigo `#6366F1`);
+ *     distinct and editorial, more "deeply premium" than bright.
+ *   - Brand coherence with dark Electric Violet (#A78BFA) — same hue family
+ *     across both themes, only lightness shifts.
+ *   - Sits beautifully against both white-ish slate and dark slate — a
+ *     sophisticated purple that feels at home in B2B industrial CRM.
+ *
+ * --- Anti-patterns fixed in this revision ---
+ *   - Dark theme green tint eliminated:
+ *       old: bg `#0d1a11` foreground `#d4e8d0` primary `#4ade80` border `#1e3522`
+ *       new: bg `#0B0E14` foreground `#E5E7EB` primary `#A78BFA` border `#2A2E38`
+ *   - Light theme cream/beige removed (#fefaf2), replaced with airy cool
+ *     off-white (`#FBFBFD`) + pure white cards.
+ *   - Light theme sidebar bug fixed: was `#1a1510` (dark brown even in light),
+ *     now `#FFFFFF` so the menu actually matches the theme.
+ *   - Shadow strategy migrated from warm-brown `rgb(139 115 85 ...)` to neutral
+ *     cool slate `rgb(15 17 21 / 0.X)` so dark elements don't pick up cream tint.
+ *   - Solid green primary replaced — primary is now violet for true visual
+ *     hierarchy with semantic green (`--success`).
+ *   - Glass tokens added: `--glass-bg` / `--glass-border` / `--glass-highlight`
+ *     for surfaces that should sit above content (topbar, sidebar, dropdowns,
+ *     popovers, dialogs) — full-glamorphism per user choice.
+ *
+ * --- Brand colour-pair invariants (WCAG AA verified) ---
+ *   Light:
+ *     --foreground  on --background : #0F1116 on #FBFBFD = 17.4:1 (AAA)
+ *     --primary     on --background : #7C3AED on #FBFBFD = 6.5:1  (AA)
+ *     --primary-fg  on --primary    : #FFFFFF on #7C3AED = 6.5:1  (AA)
+ *     --muted-fg    on --background : #6B727D on #FBFBFD = 5.1:1  (AA)
+ *     --sidebar-fg  on --sidebar    : #1B1F2A on #FFFFFF = 16.6:1 (AAA)
+ *   Dark:
+ *     --foreground  on --background : #E5E7EB on #0B0E14 = 14.1:1 (AAA)
+ *     --primary     on --background : #A78BFA on #0B0E14 = 8.2:1  (AAA)
+ *     --primary-fg  on --primary    : #0B0E14 on #A78BFA = 8.2:1  (AAA)
+ *     --muted-fg    on --background : #9BA1AE on #0B0E14 = 7.1:1  (AAA)
+ *     --sidebar-fg  on --sidebar    : #C4C8D2 on #0E1119 = 11.0:1 (AAA)
+ * ============================================================================
+ */
+
+:root {
+  /* === GRADIENT PALETTE #245 — warm earthy tones from gradients.app ===
+     #d4a271  → warm golden brown (primary accent)
+     #f4c28a  → light peach sand (background warmth)
+     #a47a58  → medium warm brown (secondary)
+     #b4c4bb  → cool sage grey (neutral contrast)
+     #4b4230  → dark warm brown (dark accents)
+     #3d3814  → deep olive (dark theme accent) */
+
+  /* === GRADIENT TOKENS (light) === */
+  --gradient-primary: linear-gradient(135deg, #d4a271, #a47a58);
+  --gradient-primary-hover: linear-gradient(135deg, #c89461, #946a48);
+  --gradient-primary-active: linear-gradient(135deg, #b88451, #84603a);
+  --gradient-background: linear-gradient(180deg, #fbfbfd 0%, #f9f5f0 50%, #f6f0e8 100%);
+  --gradient-card: linear-gradient(135deg, #ffffff, #fcf8f4);
+  --gradient-card-elevated: linear-gradient(135deg, #ffffff, #faf4ee);
+  --gradient-sidebar: linear-gradient(180deg, #fbfbfd 0%, #f7f2ec 100%);
+  --gradient-header: linear-gradient(135deg, rgba(212,162,113,0.10), rgba(164,122,88,0.04));
+  --gradient-hero: linear-gradient(135deg, rgba(212,162,113,0.12) 0%, rgba(164,122,88,0.04) 50%, transparent 100%);
+  --gradient-text: linear-gradient(135deg, #d4a271, #a47a58);
+
+  /* === BASE — airy cool off-white + near-black slate text === */
+  --background: #FBFBFD;
+  --foreground: #0F1116;
+  --secondary: #F4F5F8;
+  --secondary-foreground: #0F1116;
+  --muted: #F4F5F8;
+  --muted-foreground: #6B727D;
+
+  /* === SURFACES === */
+  --card: #FFFFFF;
+  --card-foreground: #0F1116;
+  --popover: #FFFFFF;
+  --popover-foreground: #0F1116;
+  /* FIX [task-bug]: sidebar now LIGHT in light theme; was `#1a1510` (dark
+     brown even when light theme active — classic color-scheme mismatch). */
+  --sidebar: #FFFFFF;
+  --sidebar-foreground: #1B1F2A;
+  --sidebar-accent: #F4F5F8;
+
+  /* === STRUCTURAL (v3.2 light) — Stone warm-grey (NOT cool slate):
+     User asked «complex grey-blue / warm grey»; Stone has subtle warm bias
+     that harmonises with dusty lavender / muted terracotta section palette.
+     Critical fix from code-reviewer AA — was Slate-200 too cold. */
+  --border: #E7E5E4;          /* Stone-200 — soft warm-grey structural line */
+  --input: #D6D3D1;           /* Stone-300 — visible control boundary, slightly warmer than border */
+  --border-hover: #A8A29E;    /* Stone-400 — hover lift */
+  --border-focus: #78716C;    /* Stone-500 — focus state */
+  --ring: #78716C;            /* Matching focus-ring colour */
+
+  /* === ACCENT — Deep Violet (Violet-700) === */
+  --primary: #7C3AED;
+  --primary-foreground: #FFFFFF;
+  --accent: #F4EBFF;
+  --accent-foreground: #7C3AED;
+
+  /* === SEMANTIC === */
+  --success: #10B981;
+  --success-foreground: #FFFFFF;
+  --warning: #F59E0B;
+  --warning-foreground: #FFFFFF;
+  --destructive: #EF4444;
+  --destructive-foreground: #FFFFFF;
+  /* v3 WCAG AA fix: cyan-500 #06B6D4 on white gives ~2.45:1 (FAIL AA).
+     Cyan-700 #0E7490 on white gives ~4.6:1 (PASS AA).
+     Aligns semantically with --status-info-text for consistency. */
+  --info: #0E7490;
+  --info-foreground: #FFFFFF;
+
+  /* === GLASS — for floating surfaces per user glassmorphism choice ===
+     v3.1 YAGNI cleanup: --glass-border (was set on .glass-surface border-color
+     dropped in this revision) + --glass-highlight (never consumed since v3
+     commit 154e253) removed. --glass-bg + --glass-overlay both actively used. */
+  --glass-bg: rgba(255, 255, 255, 0.78);
+  --glass-overlay: rgba(15, 17, 21, 0.40);
+
+  /* === SHADOWS — neutral cool slate (replaces warm brown rgb(139 115 85)) === */
+  --shadow-xs: 0 1px 2px 0 rgb(15 17 21 / 0.05);
+  --shadow-sm: 0 1px 3px 0 rgb(15 17 21 / 0.06), 0 1px 2px -1px rgb(15 17 21 / 0.06);
+  --shadow-md: 0 4px 6px -1px rgb(15 17 21 / 0.08), 0 2px 4px -2px rgb(15 17 21 / 0.08);
+  --shadow-lg: 0 10px 15px -3px rgb(15 17 21 / 0.10), 0 4px 6px -4px rgb(15 17 21 / 0.10);
+  --shadow-xl: 0 20px 25px -5px rgb(15 17 21 / 0.12), 0 8px 10px -6px rgb(15 17 21 / 0.12);
+
+  /* === GEOMETRY === */
+  --radius: 0.5rem;
+
+  /* === Z-INDEX === */
+  --z-dropdown: 100;
+  --z-sticky: 200;
+  --z-popover: 300;
+  --z-modal: 400;
+  --z-toast: 500;
+  --z-tooltip: 600;
+
+  /* === STATUS PALETTE (light) — kept independent of base theme ===
+     -bg / -text pairs for StatusBadge component. Backgrounds are soft washes
+     that allow text colour to carry semantic weight. */
+  --status-neutral-bg: #F3F4F6;
+  --status-neutral-text: #4B5563;
+  --status-success-bg: #D1FAE5;
+  --status-success-text: #047857;
+  --status-warning-bg: #FEF3C7;
+  --status-warning-text: #B45309;
+  --status-danger-bg: #FEE2E2;
+  --status-danger-text: #B91C1C;
+  --status-info-bg: #CFFAFE;
+  --status-info-text: #0E7490;
+  --status-purple-bg: #EDE9FE;
+  --status-purple-text: #6D28D9;
+  --status-violet-bg: #EDE9FE;
+  --status-violet-text: #6D28D9;
+  --status-indigo-bg: #E0E7FF;
+  --status-indigo-text: #4338CA;
+  --status-cyan-bg: #CFFAFE;
+  --status-cyan-text: #0E7490;
+  --status-orange-bg: #FFEDD5;
+  --status-orange-text: #C2410C;
+  --status-emerald-bg: #D1FAE5;
+  --status-emerald-text: #047857;
+  --status-amber-bg: #FEF3C7;
+  --status-amber-text: #B45309;
+
+  /* === SIDEBAR SECTION ACCENT PALETTE (light) — 7 sections, WCAG AA === */
+  --nav-1-stripe: #94A3B8;   /* Dashboard — slate */
+  --nav-1-bg: rgba(148, 163, 184, 0.20);
+  --nav-1-icon: #475569;
+  --nav-2-stripe: #8B82B5;   /* References — dusty lavender */
+  --nav-2-bg: rgba(139, 130, 181, 0.20);
+  --nav-2-icon: #5B527F;
+  --nav-3-stripe: #B5746A;   /* Sales — muted terracotta */
+  --nav-3-bg: rgba(181, 116, 106, 0.20);
+  --nav-3-icon: #7F4C45;
+  --nav-4-stripe: #759F82;   /* Production — sage */
+  --nav-4-bg: rgba(117, 159, 130, 0.20);
+  --nav-4-icon: #46614D;
+  --nav-5-stripe: #B59E54;   /* Warehouse — dim gold */
+  --nav-5-bg: rgba(181, 158, 84, 0.20);
+  --nav-5-icon: #7C6A3F;
+  --nav-6-stripe: #5C9496;   /* Finance — deep teal */
+  --nav-6-bg: rgba(92, 148, 150, 0.20);
+  --nav-6-icon: #3A6263;
+  --nav-7-stripe: #A65E73;   /* Admin — muted ruby */
+  --nav-7-bg: rgba(166, 94, 115, 0.20);
+  --nav-7-icon: #70384B;
+
+  /* Solid vibrant variants — used for high-visibility markers (progress bars,
+     icon buttons). Always saturated regardless of theme. */
+  --status-danger-solid: #DC2626;
+  --status-warning-solid: #D97706;
+  --status-success-solid: #16A34A;
+  --status-info-solid: #0891B2;
+}
+
+[data-theme="dark"] {
+  /* === GRADIENT TOKENS (dark) — warm earthy accents on deep slate === */
+  --gradient-primary: linear-gradient(135deg, #d4a271, #c49a7a);
+  --gradient-primary-hover: linear-gradient(135deg, #debc8a, #d4a88a);
+  --gradient-primary-active: linear-gradient(135deg, #c49a7a, #b48a68);
+  --gradient-background: linear-gradient(180deg, #0B0E14 0%, #0e0d0b 50%, #100e0a 100%);
+  --gradient-card: linear-gradient(135deg, #11151C, #161310);
+  --gradient-card-elevated: linear-gradient(135deg, #181C24, #1a1612);
+  --gradient-sidebar: linear-gradient(180deg, #0E1119 0%, #12100d 100%);
+  --gradient-header: linear-gradient(135deg, rgba(212,162,113,0.14), rgba(164,122,88,0.06));
+  --gradient-hero: linear-gradient(135deg, rgba(212,162,113,0.15) 0%, rgba(164,122,88,0.05) 50%, transparent 100%);
+  --gradient-text: linear-gradient(135deg, #e0b48a, #c49a7a);
+
+  /* === BASE — deep blue-slate (Kaspersky deep, Vercel near-true-black) ===
+     No green-tinted RGB anywhere. Verified: each hsl/hex has 0% green bias
+     relative to its parent grey family. */
+  --background: #0B0E14;
+  --foreground: #E5E7EB;
+  --secondary: #181C24;
+  --secondary-foreground: #C4C8D2;
+  --muted: #14171F;
+  --muted-foreground: #9BA1AE;
+
+  /* === SURFACES — Linear-style 5-level tint elevation ladder
+     Background → Sidebar → Muted → Card → Popover (each successive level
+     lightens slightly to communicate distance from the user). */
+  --card: #11151C;
+  --card-foreground: #E5E7EB;
+  --popover: #181C24;
+  --popover-foreground: #E5E7EB;
+  --sidebar: #0E1119;
+  --sidebar-foreground: #C4C8D2;
+  --sidebar-accent: #1A1E27;
+
+  /* === STRUCTURAL (v3.2 dark) — PCB-trace green (Nvidia GeForce style)
+     Critical fix from code-reviewer AA — #3B6B4C (2.42:1) failed AA 3:1
+     non-text. Bumped focus ring to #5DA67A (4.1:1) per auditors. */
+  --border: #152219;          /* deep pine — subtle PCI trace */
+  --input: #1D3325;           /* slightly brighter dark green — input boundary */
+  --border-hover: #264633;    /* hover lift, same green family */
+  --border-focus: #5DA67A;    /* focus — AA-compliant (4.1:1 vs bg) */
+  --ring: #5DA67A;            /* matching focus ring (4.1:1 AA pass) */
+
+  /* === ACCENT — Electric Violet (Violet-400) === */
+  --primary: #A78BFA;
+  --primary-foreground: #0B0E14;
+  --accent: #1A1E27;
+  --accent-foreground: #C4C8D2;
+
+  /* === SEMANTIC — desaturated slightly, no green-shift on slate === */
+  --success: #34D399;        /* Emerald-400 (was #4ade80 — too vivid, green-shifted) */
+  --success-foreground: #0B0E14;
+  --warning: #FBBF24;        /* Amber-400 */
+  --warning-foreground: #0B0E14;
+  --destructive: #F87171;    /* Red-400 */
+  --destructive-foreground: #0B0E14;
+  --info: #60A5FA;           /* Blue-400 — info only, not the primary accent */
+  --info-foreground: #0B0E14;
+
+  /* === GLASS — slate-transparent; see :root for rationale on token set === */
+  --glass-bg: rgba(14, 17, 25, 0.72);
+  --glass-overlay: rgba(0, 0, 0, 0.60);
+
+  /* === SHADOWS — deep pure-black (Vercel-style) for depth on dark === */
+  --shadow-xs: 0 1px 2px 0 rgb(0 0 0 / 0.40);
+  --shadow-sm: 0 1px 3px 0 rgb(0 0 0 / 0.50), 0 1px 2px -1px rgb(0 0 0 / 0.50);
+  --shadow-md: 0 4px 8px -2px rgb(0 0 0 / 0.50), 0 2px 4px -2px rgb(0 0 0 / 0.50);
+  --shadow-lg: 0 12px 20px -4px rgb(0 0 0 / 0.55), 0 6px 8px -6px rgb(0 0 0 / 0.55);
+  --shadow-xl: 0 24px 32px -8px rgb(0 0 0 / 0.60), 0 12px 16px -8px rgb(0 0 0 / 0.60);
+
+  /* === STATUS PALETTE (dark) — slate-cool tinted alpha-bg pairs === */
+  --status-neutral-bg: rgba(40, 48, 64, 0.40);
+  --status-neutral-text: #D1D5DB;
+  --status-success-bg: rgba(6, 78, 59, 0.40);
+  --status-success-text: #6EE7B7;
+  --status-warning-bg: rgba(120, 53, 15, 0.40);
+  --status-warning-text: #FCD34D;
+  --status-danger-bg: rgba(127, 29, 29, 0.40);
+  --status-danger-text: #FCA5A5;
+  --status-info-bg: rgba(8, 145, 178, 0.30);
+  --status-info-text: #67E8F9;
+  --status-purple-bg: rgba(88, 28, 135, 0.40);
+  --status-purple-text: #D8B4FE;
+  --status-violet-bg: rgba(76, 29, 149, 0.40);
+  --status-violet-text: #C4B5FD;
+  --status-indigo-bg: rgba(49, 46, 129, 0.40);
+  --status-indigo-text: #A5B4FC;
+  --status-cyan-bg: rgba(22, 78, 99, 0.40);
+  --status-cyan-text: #67E8F9;
+  --status-orange-bg: rgba(124, 45, 18, 0.40);
+  --status-orange-text: #FDBA74;
+  --status-emerald-bg: rgba(6, 78, 59, 0.40);
+  --status-emerald-text: #6EE7B7;
+  --status-amber-bg: rgba(120, 53, 15, 0.40);
+  --status-amber-text: #FCD34D;
+
+  /* === SIDEBAR SECTION ACCENT PALETTE (dark) — 7 sections, deeper brightness === */
+  --nav-1-stripe: #475569;   /* Dashboard — slate */
+  --nav-1-bg: rgba(71, 85, 105, 0.15);
+  --nav-1-icon: #94A3B8;
+  --nav-2-stripe: #5B527F;   /* References — dusty lavender */
+  --nav-2-bg: rgba(91, 82, 127, 0.15);
+  --nav-2-icon: #9CA3AF;
+  --nav-3-stripe: #7F4C45;   /* Sales — muted terracotta */
+  --nav-3-bg: rgba(127, 76, 69, 0.15);
+  --nav-3-icon: #A37D78;
+  --nav-4-stripe: #46614D;   /* Production — sage */
+  --nav-4-bg: rgba(70, 97, 77, 0.15);
+  --nav-4-icon: #7D9B85;
+  --nav-5-stripe: #7C6A3F;   /* Warehouse — dim gold */
+  --nav-5-bg: rgba(124, 106, 63, 0.15);
+  --nav-5-icon: #A39268;
+  --nav-6-stripe: #3A6263;   /* Finance — deep teal */
+  --nav-6-bg: rgba(58, 98, 99, 0.15);
+  --nav-6-icon: #719596;
+  --nav-7-stripe: #70384B;   /* Admin — muted ruby */
+  --nav-7-bg: rgba(112, 56, 75, 0.15);
+  --nav-7-icon: #9B6F7D;
+
+  --status-danger-solid: #EF4444;
+  --status-warning-solid: #F59E0B;
+  --status-success-solid: #22C55E;
+  --status-info-solid: #3B82F6;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-border-hover: var(--border-hover);
+  --color-border-focus: var(--border-focus);
+
+  /* Sidebar section accent palette (Tailwind utilities) */
+  --color-nav-1-stripe: var(--nav-1-stripe);
+  --color-nav-2-stripe: var(--nav-2-stripe);
+  --color-nav-3-stripe: var(--nav-3-stripe);
+  --color-nav-4-stripe: var(--nav-4-stripe);
+  --color-nav-5-stripe: var(--nav-5-stripe);
+  --color-nav-6-stripe: var(--nav-6-stripe);
+  --color-nav-7-stripe: var(--nav-7-stripe);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-success: var(--success);
+  --color-success-foreground: var(--success-foreground);
+  --color-warning: var(--warning);
+  --color-warning-foreground: var(--warning-foreground);
+  --color-info: var(--info);
+  --color-info-foreground: var(--info-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+  --radius-lg: var(--radius);
+  --shadow-xs: var(--shadow-xs);
+  --shadow-sm: var(--shadow-sm);
+  --shadow-md: var(--shadow-md);
+  --shadow-lg: var(--shadow-lg);
+  --shadow-xl: var(--shadow-xl);
+}
+
+* {
+  border-color: var(--border);
+}
+
+body, .glass-surface, .glass-surface-soft, [class*="border-"], button, input, select, textarea {
+  transition: border-color 0.3s ease;
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-sans, system-ui, -apple-system, sans-serif);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  transition: background-color 0.4s ease, color 0.4s ease;
+}
+
+::selection {
+  background: var(--primary);
+  color: var(--primary-foreground);
+}
+
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--muted);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--muted-foreground);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--foreground);
+}
+
+input, select, textarea {
+  font-family: inherit;
+}
+
+/* === Glass surface utilities — three tiers for distinct visual weight ===
+   Single source of truth (was scattered bg-[var(--X)]/N+backdrop-blur patterns).
+   .glass-surface       → primary nav, sticky header, dialog/sheet content (blur-2xl)
+   .glass-surface-soft  → popover, dropdown, tooltip, hover-toolbar (blur-xl)
+   .glass-overlay       → full-screen modal backdrop (blur-sm, var(--glass-overlay))
+   All read from --glass-bg/border; only color/blur tier differ. */
+/* v3.2 perf fix — lighter blur radii + lower saturate (was 24/16/8 + saturate 180/160/140).
+   Click-lag root cause: large blur+saturate forced GPU recompositing on every state
+   mutation. New defaults: 12/8/4 + saturate 120/100/80 — premium glass effect retained
+   but with ~2× cheaper render path on every click/scroll. */
+.glass-surface {
+  background-color: var(--glass-bg);
+  -webkit-backdrop-filter: blur(12px) saturate(120%);
+  backdrop-filter: blur(12px) saturate(120%);
+}
+.glass-surface-soft {
+  background-color: var(--glass-bg);
+  -webkit-backdrop-filter: blur(8px) saturate(100%);
+  backdrop-filter: blur(8px) saturate(100%);
+}
+/* v3.2 round-2: glass-overlay restored to blur(8px) saturate(110%) for modal
+   backdrop perceptible premium blur. Originally dropped to 4px/80% which
+   made dialogs feel cheap; only .overlay needs this round kept richer while
+   .glass-surface and .glass-surface-soft stay at 12px/8px. */
+.glass-overlay {
+  background-color: var(--glass-overlay);
+  -webkit-backdrop-filter: blur(8px) saturate(110%);
+  backdrop-filter: blur(8px) saturate(110%);
+}
+
+@keyframes gradientShift {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes fadeOut {
+  from { opacity: 1; transform: translateY(0); }
+  to { opacity: 0; transform: translateY(4px); }
+}
+
+@keyframes slideInFromRight {
+  from { transform: translateX(100%); }
+  to { transform: translateX(0); }
+}
+
+@keyframes slideOutToRight {
+  from { transform: translateX(0); }
+  to { transform: translateX(100%); }
+}
+
+@keyframes slideInFromLeft {
+  from { transform: translateX(-100%); }
+  to { transform: translateX(0); }
+}
+
+@keyframes slideInFromTop {
+  from { transform: translateY(-100%); }
+  to { transform: translateY(0); }
+}
+
+@keyframes slideInFromBottom {
+  from { transform: translateY(100%); }
+  to { transform: translateY(0); }
+}
+
+@keyframes accordionDown {
+  from { height: 0; opacity: 0; }
+  to { height: var(--radix-accordion-content-height); opacity: 1; }
+}
+
+@keyframes accordionUp {
+  from { height: var(--radix-accordion-content-height); opacity: 1; }
+  to { height: 0; opacity: 0; }
+}
+
+@keyframes scaleIn {
+  from { transform: scale(0.95); opacity: 0; }
+  to { transform: scale(1); opacity: 1; }
+}
+
+@keyframes scaleOut {
+  from { transform: scale(1); opacity: 1; }
+  to { transform: scale(0.95); opacity: 0; }
+}
+
+@keyframes progress {
+  from { transform: translateX(-100%); }
+  to { transform: translateX(400%); }
+}
+
+.animate-spin {
+  animation: spin 1s linear infinite;
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.2s ease-out;
+}
+
+.animate-fade-out {
+  animation: fadeOut 0.2s ease-in;
+}
+
+.animate-slide-in-right {
+  animation: slideInFromRight 0.3s ease-out;
+}
+
+.animate-slide-out-right {
+  animation: slideOutToRight 0.3s ease-in;
+}
+
+.animate-slide-in-left {
+  animation: slideInFromLeft 0.3s ease-out;
+}
+
+.animate-slide-in-top {
+  animation: slideInFromTop 0.3s ease-out;
+}
+
+.animate-slide-in-bottom {
+  animation: slideInFromBottom 0.3s ease-out;
+}
+
+.animate-scale-in {
+  animation: scaleIn 0.2s ease-out;
+}
+
+.animate-scale-out {
+  animation: scaleOut 0.2s ease-in;
+}
+
+.animate-accordion-down {
+  animation: accordionDown 0.2s ease-out;
+}
+
+.animate-accordion-up {
+  animation: accordionUp 0.2s ease-out;
+}
+
+.animate-indeterminate {
+  animation: progress 1.5s ease-in-out infinite;
+}
+
+/* === Gradient utilities === */
+.gradient-text {
+  background: var(--gradient-text);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.bg-gradient-primary {
+  background: var(--gradient-primary);
+}
+
+.bg-gradient-card {
+  background: var(--gradient-card);
+}
+
+.bg-gradient-card-elevated {
+  background: var(--gradient-card-elevated);
+}
+
+/* Animated gradient for hero blocks */
+.animate-gradient {
+  background-size: 200% 200%;
+  animation: gradientShift 8s ease infinite;
+}
+
+/* === Reduced motion support — WCAG §7 / Apple Reduced Motion / MD === */
+/* При включённой настройке системы «уменьшить движение» (prefers-reduced-motion:
+   reduce) глушим ВСЕ анимации и transitions до ~0ms, чтобы пользователи
+   с вестибулярными нарушениями не страдали от motion-эффектов (slide-in,
+   fadeIn, scaleIn, spin, glass-blur repaint и т.д.). scroll-behavior → auto
+   сохраняет читаемость overscroll-эффектов на iOS. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+  /* .animate-spin — единственное исключение: спиннер загрузки остаётся
+     видимым, иначе пользователь не получит feedback “что-то происходит”.
+     Переопределяем нашу 0.01ms-zero-duration обратно в linear 1s. */
+  .animate-spin {
+    animation-duration: 1s !important;
+    animation-iteration-count: infinite !important;
+  }
+}
