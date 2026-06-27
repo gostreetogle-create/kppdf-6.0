@@ -84,7 +84,8 @@
 | **Техписатель (utility)** | USER-JOURNEYS +12 / FLOW-MAP +3 Mermaid / GLOSSARY +10 | ТЗ-010A/B/C | ⚠️ done с hard-limit override: USER-JOURNEYS 678/500, FLOW-MAP 616/300, GLOSSARY audit log 148/80 (per PSL-026 precedent для master-файлов) |
 | **Аудитор (надзор)** | ТЗП-001: 12 static + 7 semantic = 19 проверок | ТЗП-001 + аудитор-fix агенты | ✅ done (⚠️ PASS-WITH-WARNINGS 75%, gaps 3/5 fixed) |
 | **Закрытие Универсал** | ТЗ-0000 Universal Closure Protocol (6 фаз) | ТЗ-0000 | ✅ done (применён ко всем CLOSURE-REPORT) |
-| **Полный audit / консолидация** | MASTER-VISION.md + CHECKLIST.md v1.4 + консолидация в 3 masters | PSL-026 + PSL-031 | ✅ done |
+| **Run 2/5 Аналитик Договор** | ТЗ-011: 4 STUB (RBAC + правила + статусы + переходы) — mirror proven ТЗ-002 + 4 additions (КП-compatibility + BUSINESS-VISION + perehody-4th + guardrail) | ТЗ-011 | 📋 ready (запуск параллельным Аналитик-агентом) |
+| **Полный audit / консолидация** | MASTER-VISION.md + CHECKLIST.md v1.4 + консолидация в 3 masters + ТЗ-011 spec (Run 2/5) | PSL-026 + PSL-031 + PSL-032 | ✅ done (ТЗ-011 ready к запуску) |
 
 **БЛОКИРУЮЩИЙ РЕЗУЛЬТАТ:** Phase 1 Bootstrap Prisma + Phase 2 Mantine UI **РАЗБЛОКИРОВАНЫ** (per AUDITOR PASS-WITH-WARNINGS + INTEGRATION-PLAN §6.3). ТЗ-004 deliverеd `prisma/schema.prisma` с verified Comment + packageTag (976 строк verified via grep). ТЗ-002 deliverеd RBAC-middleware готов к Phase 2.
 

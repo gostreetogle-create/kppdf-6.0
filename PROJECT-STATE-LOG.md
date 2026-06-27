@@ -47,6 +47,23 @@
 
 > Самые новые записи — сверху. Монотонная нумерация PSL-NNN.
 
+### PSL-032 — ТЗ-011 создан (Run 2/5 Аналитик Договор — 4 STUB fill mirror proven ТЗ-002 + 4 additions)
+
+| Поле | Значение |
+|---|---|
+| **Дата** | 2026-06-27 |
+| **Событие** | Создан `99_Справочники/TASKS/ТЗ-011-RUN-2-5-АНАЛИТИК-ДОГОВОР.md` (~1000 строк, 11 разделов) — техзадание для параллельного ИИ-агента на заполнение 4 STUB модуля Договор. |
+| **Strategic anchor** | ТЗ интегрирует [BUSINESS-VISION.md](../BUSINESS-VISION.md) §0/§3 в §2.3 anti-features checklist + §4 Inputs 🔴 priority + §7 Quality. |
+| **Proven pattern** | ТЗ-002 (Run 1/5 КП, ✅ CLOSED 100%) использован как mirror template — структура §0-§10 идентична. |
+| **4 additions vs ТЗ-002** | (1) 4-й target — `03-perehody.md` (Договор имеет отдельный файл perehody, не интегрирован в statusy как у КП). (2) Cross-module КП-compatibility §5.4 — hard-link на `INV-КП-CONV-*` вместо дубля. (3) BUSINESS-VISION §3 anti-catalog §2.3 + §4 Inputs 🔴. (4) Self-check guardrail #11 (parentProposalId rule + КП inheritance). |
+| **4 STUB targets** | `02_Договор/04-pravila/04-rbac.md` (50-80 правил), `04-biznes-pravila.md` (30-50 правил, 9 групп), `03-zhiznennyj-cikl/03-statusy.md` (ровно 7 статусов), `03-zhiznennyj-cikl/03-perehody.md` (≥11 переходов + Mermaid). |
+| **Hard limits** | 400/400/250/250 строк на STUB, 500 на REPORT — mirror AGENT-REVIEW §1.6. |
+| **Quality criteria** | 11 hard (включая 4 новых: CHAIN-KP hard-link / CHAIN-PRODUCTION hard-link / cross-module consistency rule #10 / Mermaid validity) + 5 soft. |
+| **Затронутые файлы** | **🆕 Создан (1 файл):**<br>- `99_Справочники/TASKS/ТЗ-011-RUN-2-5-АНАЛИТИК-ДОГОВОР.md` (~1000 строк, 11 разделов).<br><br>**🚫 НЕ затронуты:**<br>- `02_Договор/МОДУЛЬ-ДОГОВОР.md` (источник V0, frozen).<br>- `01_КП/04-pravila/*` (Run 1/5 результат frozen после CLOSED).<br>- `99_Справочники/TASKS/ТЗ-002-RUN-1-5-АНАЛИТИК-КП.md` (proven template, frozen после FINALIZED).<br>- `MASTER-VISION.md` (обновляется в этом коммите отдельно). |
+| **Готовность** | ✅ Готово к запуску параллельным Аналитик-агентом. Не блокирует Phase 1 Bootstrap (ТЗ-004 ✅ done) или Phase 2 UI (ТЗ-003 ✅ done). |
+| **Verification needed** | Перед запуском агента: проверить `02_Договор/LAUNCH-ANALYST-DOGOVOR.md` существует — иначе использовать `01_КП/LAUNCH-ANALYST.md` как base. |
+| **Связь** | Run 2/5 → downstream Run 3/5 (Производство) / Run 4/5 (Склад) per INTEGRATION-PLAN §6.2 Tier-DAG. |
+
 ### PSL-031 — ТЗП-001 gaps исправлены (3/5: битые ссылки BIG-BOOK + PSL-013 порядок)
 
 | Поле | Значение |
