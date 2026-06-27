@@ -47,6 +47,20 @@
 
 > Самые новые записи — сверху. Монотонная нумерация PSL-NNN.
 
+### PSL-033 — LAUNCH-ANALYST-DOGOVOR.md создан (готов к запуску Run 2/5 Аналитика Договор параллельным агентом через CODEBUFF spawn)
+
+| Поле | Значение |
+|---|---|
+| **Дата** | 2026-06-27 |
+| **Событие** | Создан `02_Договор/LAUNCH-ANALYST-DOGOVOR.md` (~250 строк, 8 разделов) — готовый copy-paste пакет для запуска параллельного Бизнес-аналитика Run 2/5 в новой CODEBUFF сессии. |
+| **Proven pattern** | Mirror `01_КП/LAUNCH-ANALYST.md` (Run 1/5 КП → ✅ CLOSED 100% PSL-006) с Договор-specific правками: (1) 4 STUB targets вместо 3 (добавлен `03-perehody.md`); (2) ID-префиксы Договор-specific (RBAC-ДОГ-* / INV-ДОГ-* / SM-ДОГ-*); (3) §1 Пакет C (КП reference × 3 файла для mirror ID-convention); (4) §2 Ограничение #2 STRICT hard-link на INV-КП-CONV-* (ЗАПРЕЩЕНО дублировать формулировки КП); (5) §2 Ограничение #4 BUSINESS-VISION §3 anti-catalog compliance grep; (6) §6 CHECK 6 grep BUSINESS-VISION + CHECK 7 Mermaid validity criteria + CHECK 8 hard limits + CHECK 9 СПОР-покрытие. |
+| **17 файлов attach-list** | Пакет A (4) agent infra + Пакет B (5) strategic + Пакет C (3) КП reference + Пакет D (5) Договор source + STUB = ~3500 строк / ~30k tokens, safe для OOM. |
+| **5 гарантий §2 промпта** | (1) SCOPE: только 4 STUB in Пакета D, остальное НЕ трогать; (2) HARD-LINK на КП вместо дублирования; (3) HARD-LINK на МОДУЛЬ-ФИНАНСЫ/ПРОИЗВОДСТВО; (4) ANTI-CATALOG no WebSocket/OAuth/S3/microservice/i18n/Kubernetes; (5) ID-convention mirror КП. |
+| **Затронутые файлы** | **🆕 Создан (1 файл):**<br>- `02_Договор/LAUNCH-ANALYST-DOGOVOR.md` (~250 строк, 8 разделов).<br><br>**🚫 НЕ затронуты:**<br>- ТЗ-011 (proven pattern, frozen после FINALIZED).<br>- `02_Договор/МОДУЛЬ-ДОГОВОР.md` (source V0, frozen).<br>- Run 1/5 КП результаты.<br>- `99_Справочники/*` (каноны, frozen). |
+| **Когда использовать** | В новой CODEBUFF сессии: `codebuff --new` → прикрепить 17 файлов из §1 → скопировать промпт из §2 → отправить → Аналитик Run 2/5 начнёт работу → вернётся через ~15 мин с обзором изменений. |
+| **Next stage** | После прогона: PSL-033 в PROJECT-STATE-LOG.md → commit + push → potentially spawn Run 3/5 (Производство) или Phase 1 Bootstrap actual deploy. |
+| **Связь** | INTEGRATION-PLAN §6.2 Tier-DAG Run 2/5 (между Run 1/5 ✅ и Run 3/5 ⏸). |
+
 ### PSL-032 — ТЗ-011 создан (Run 2/5 Аналитик Договор — 4 STUB fill mirror proven ТЗ-002 + 4 additions)
 
 | Поле | Значение |
