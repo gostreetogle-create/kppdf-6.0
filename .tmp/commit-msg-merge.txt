@@ -1,0 +1,13 @@
+merge: integrate remote architect decomposition with local session wrap-up
+
+Merge origin/main (Architect decomposition commits 4b5e106 + 75a9ca6
+covering Phase 0 + Финансы Architect output) with local session wrap-up
+work (PSL-045 audit correction + launch packages for Run 4/5 + 5/5 +
+ID-ALIAS-MAP + .gitignore hygiene).
+
+All conflicts resolved by preferring remote/Architect content (--theirs)
+where both sides modified the same file (CHECKLIST.md, MASTER-VISION.md).
+New files from local session wrap-up (LAUNCH-ANALYST-SKLAD.md,
+LAUNCH-ANALYST-FINANSY.md, ID-ALIAS-MAP.md, ТЗ-013, ТЗ-014) are preserved.
+
+Refs: PSL-040, PSL-041, PSL-043, PSL-045.

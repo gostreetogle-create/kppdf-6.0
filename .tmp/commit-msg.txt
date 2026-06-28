@@ -1,0 +1,19 @@
+chore(docs): session wrap-up - launch packages for run 4/5 + 5/5 + id-alias-map
+
+10 files (8 new + 2 modified) from session wrap-up for analyst pipeline:
+
+new:
+- 04_Склад/LAUNCH-ANALYST-SKLAD.md: launch package for run 4/5 analyst sklad
+- 05_Финансы/LAUNCH-ANALYST-FINANSY.md: launch package for run 5/5 analyst finansy
+- 99_Справочники/ID-ALIAS-MAP.md: id alias map for frozen upstream cross-refs
+- 99_Справочники/TASKS/ТЗ-013: run 4/5 sklad analyst spec (finalized)
+- 99_Справочники/TASKS/ТЗ-014: run 5/5 finansy analyst spec (finalized)
+
+modified:
+- 99_Справочники/TASKS/ТЗ-011, ТЗ-012: code-reviewer final polish
+- CHECKLIST.md: 10 ready to launch → 0 ready (all closed)
+- MASTER-VISION.md: §4 next-step cli
+- .gitignore: minor hygiene
+
+Refs: PSL-040 (ТЗ-013 finalized), psl-041 (run 4/5 launch),
+      psl-043 (id-alias-map), psl-045 (prisma schema drift fix).
