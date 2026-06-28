@@ -22,3 +22,6 @@ coverage/
 .env
 .env.local
 .env.*.local
+
+# Prisma generated client (auto-generated, recreated by `pnpm prisma generate`)
+/src/generated/prisma/

@@ -14,16 +14,16 @@
 
 ## 0. Оглавление (1 экран)
 
-| Раздел | Что внутри |
-|---|---|
-| §1 VISION | Зачем проект, что за бизнес |
-| §2 MISSION | 5 модулей — что каждый делает |
-| §3 ✅ ВЫПОЛНЕНО | 7 главных вех (Phase 0 → Setup → Pipeline готов → …) |
-| §4 🔄 В РАБОТЕ ПАРАЛЛЕЛЬНО | 10 ТЗ + 1 надзорное, 7 distinct roles |
-| §5 🎯 КУДА ДВИГАЕМСЯ | 3 фазы roadmap до Production |
-| §6 📁 ТОП-10 ДОКУМЕНТОВ | Самые важные файлы (≤ 10 ссылок) |
-| §7 ❓ ЧТО НЕ ТРОГАТЬ | Зоны параллельной работы агентов |
-| §8 Версия | История |
+| Раздел                     | Что внутри                                           |
+| -------------------------- | ---------------------------------------------------- |
+| §1 VISION                  | Зачем проект, что за бизнес                          |
+| §2 MISSION                 | 5 модулей — что каждый делает                        |
+| §3 ✅ ВЫПОЛНЕНО            | 7 главных вех (Phase 0 → Setup → Pipeline готов → …) |
+| §4 🔄 В РАБОТЕ ПАРАЛЛЕЛЬНО | 10 ТЗ + 1 надзорное, 7 distinct roles                |
+| §5 🎯 КУДА ДВИГАЕМСЯ       | 3 фазы roadmap до Production                         |
+| §6 📁 ТОП-10 ДОКУМЕНТОВ    | Самые важные файлы (≤ 10 ссылок)                     |
+| §7 ❓ ЧТО НЕ ТРОГАТЬ       | Зоны параллельной работы агентов                     |
+| §8 Версия                  | История                                              |
 
 ---
 
@@ -37,13 +37,13 @@
 
 ## 2. MISSION (5 модулей)
 
-| # | Модуль | МОДУЛЬ-док | Префикс | Суть | Бизнес-ценность |
-|---|---|---|---|---|---|
-| 1 | `01_КП/` | [`МОДУЛЬ-КОММЕРЧЕСКОЕ-ПРЕДЛОЖЕНИЕ.md`](01_КП/) | `КП-XXXX` | Конструктор КП. 3-зонный макет (витрина / лист A4 / панель действий), автосохранение, 6 статусов | Ускорение продаж: 30 сек для другого юрлица, инлайн-поиск товаров, авто-применение наценки/НДС |
-| 2 | `02_Договор/` | [`МОДУЛЬ-ДОГОВОР.md`](02_Договор/) | `Д-XXXX` | Юридический документ (шапка + Спецификация + футер). 7 статусов. **Триггер СПОР-5**: при подписании авто-создаётся **Order** в Финансах | Фиксация обязательств. Конвертация из «Оплачено» КАТЕГОРИЧЕСКИ ЗАПРЕЩЕНА |
-| 3 | `03_Производство/` | [`МОДУЛЬ-ПРОИЗВОДСТВО.md`](03_Производство/) | `ЗК-XXXX` | Производственный заказ. 8 статусов. **Авто-создаётся** при КП `paid`. Только `kind='ITEM'` даёт приход в Склад | Контроль производства + авто-связь со Складом (StockMovement: IN) |
-| 4 | `04_Склад/` | [`МОДУЛЬ-СКЛАД-ПОДРОБНЫЙ.md`](04_Склад/) | `СД-/ОТК-/АС-/ЗП-XXXX` | 4 операции = 4 документа: SupplierDelivery / Shipment / WriteOffAct / PurchaseOrder. Immutable StockMovement | Главная цифра `availableQty = quantity − reservedQuantity`. Никаких ретро-правок |
-| 5 | `05_Финансы/` | [`МОДУЛЬ-ФИНАНСЫ.md`](05_Финансы/) | `Order-/Inv-/Pay-/Ref-XXXX` | Финансовый контур. 5 статусов Order. 2 разные сущности: **Storno** (type=STORNO, amount<0) vs **Refund** (отдельная сущность, amount>0) | Маржа, безопасные списания. Storno ≠ Refund (R7 / GAP-023) |
+| #   | Модуль             | МОДУЛЬ-док                                     | Префикс                     | Суть                                                                                                                                    | Бизнес-ценность                                                                                |
+| --- | ------------------ | ---------------------------------------------- | --------------------------- | --------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------- |
+| 1   | `01_КП/`           | [`МОДУЛЬ-КОММЕРЧЕСКОЕ-ПРЕДЛОЖЕНИЕ.md`](01_КП/) | `КП-XXXX`                   | Конструктор КП. 3-зонный макет (витрина / лист A4 / панель действий), автосохранение, 6 статусов                                        | Ускорение продаж: 30 сек для другого юрлица, инлайн-поиск товаров, авто-применение наценки/НДС |
+| 2   | `02_Договор/`      | [`МОДУЛЬ-ДОГОВОР.md`](02_Договор/)             | `Д-XXXX`                    | Юридический документ (шапка + Спецификация + футер). 7 статусов. **Триггер СПОР-5**: при подписании авто-создаётся **Order** в Финансах | Фиксация обязательств. Конвертация из «Оплачено» КАТЕГОРИЧЕСКИ ЗАПРЕЩЕНА                       |
+| 3   | `03_Производство/` | [`МОДУЛЬ-ПРОИЗВОДСТВО.md`](03_Производство/)   | `ЗК-XXXX`                   | Производственный заказ. 8 статусов. **Авто-создаётся** при КП `paid`. Только `kind='ITEM'` даёт приход в Склад                          | Контроль производства + авто-связь со Складом (StockMovement: IN)                              |
+| 4   | `04_Склад/`        | [`МОДУЛЬ-СКЛАД-ПОДРОБНЫЙ.md`](04_Склад/)       | `СД-/ОТК-/АС-/ЗП-XXXX`      | 4 операции = 4 документа: SupplierDelivery / Shipment / WriteOffAct / PurchaseOrder. Immutable StockMovement                            | Главная цифра `availableQty = quantity − reservedQuantity`. Никаких ретро-правок               |
+| 5   | `05_Финансы/`      | [`МОДУЛЬ-ФИНАНСЫ.md`](05_Финансы/)             | `Order-/Inv-/Pay-/Ref-XXXX` | Финансовый контур. 5 статусов Order. 2 разные сущности: **Storno** (type=STORNO, amount<0) vs **Refund** (отдельная сущность, amount>0) | Маржа, безопасные списания. Storno ≠ Refund (R7 / GAP-023)                                     |
 
 > **Note:** `0X_*/README.md` entrypoint files существуют только для `01_КП/` (PSL-004) и `02_Договор/` (PSL-021). Для остальных 3 модулей будут созданы Архитекторами в рамках ТЗ-007/008/009 (next batch). До тех пор — точка входа = `МОДУЛЬ-*.md` source.
 
@@ -55,15 +55,16 @@
 
 Хронологически от дна вверх = от старта проекта до сегодня:
 
-| # | Дата | Веха | Артефакты | Где детали |
-|---|---|---|---|---|
-| 1 | 26.06 | Phase 0 Setup + Pipeline v6 запущен | 6 AGENT-файлов, реорганизация по доменам, 19 документов | `AGENT-РOLES.md`, `AGENT-METHOD.md` |
-| 2 | 26.06 | Согласован стек v6 (15 OQ) | Next.js 16 + React 19 + Mantine + PostgreSQL 16 + Prisma 7 + pnpm + Husky | [`99_Справочники/СТЕК-ПРЕДПИСАНИЕ.md`](99_Справочники/СТЕК-ПРЕДПИСАНИЕ.md) |
-| 3 | 24.06 | 38 Q + 15 СПОР закрыты | 100% готовность теории, Phase 1 Bootstrap разблокирован | [`99_Справочники/OPEN-QUESTIONS-MASTER.md`](99_Справочники/OPEN-QUESTIONS-MASTER.md) |
-| 4 | 27.06 | 5 launch-пакетов готовы | Архитектор + Аналитик + Моделировщик + Аудитор + Координатор | `01_КП/LAUNCH-*.md` |
-| 5 | 27.06 | Methodology v2 | 3 случая `ask_user` + 4 UX-принципа PO + Pre/Post-action checklist | `AGENT-METHOD.md` §5.3-§5.6, [PSL-008..009](PROJECT-STATE-LOG.md) |
-| 6 | 27.06 | ТЗ-006 выполнено | scoring 1-5 для 53 артефактов + шаблон СПОРА → методология финализирована | `99_Справочники/СПОРНЫЕ-МОМЕНТЫ.md`, [PSL-018](PROJECT-STATE-LOG.md) |
-| 7 | 27.06 | 5 модулей декомпозированы | 16 + 20 + 20 + 19 STUB файлов для Договор/Производство/Склад/Финансы (КП уже в PSL-004) | [PSL-021..024](PROJECT-STATE-LOG.md) |
+| #   | Дата  | Веха                                                     | Артефакты                                                                                                                                                                                                                                                                                                                      | Где детали                                                                           |
+| --- | ----- | -------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------ |
+| 1   | 26.06 | Phase 0 Setup + Pipeline v6 запущен                      | 6 AGENT-файлов, реорганизация по доменам, 19 документов                                                                                                                                                                                                                                                                        | `AGENT-РOLES.md`, `AGENT-METHOD.md`                                                  |
+| 2   | 26.06 | Согласован стек v6 (15 OQ)                               | Next.js 16 + React 19 + Mantine + PostgreSQL 16 + Prisma 7 + pnpm + Husky                                                                                                                                                                                                                                                      | [`99_Справочники/СТЕК-ПРЕДПИСАНИЕ.md`](99_Справочники/СТЕК-ПРЕДПИСАНИЕ.md)           |
+| 3   | 24.06 | 38 Q + 15 СПОР закрыты                                   | 100% готовность теории, Phase 1 Bootstrap разблокирован                                                                                                                                                                                                                                                                        | [`99_Справочники/OPEN-QUESTIONS-MASTER.md`](99_Справочники/OPEN-QUESTIONS-MASTER.md) |
+| 4   | 27.06 | 5 launch-пакетов готовы                                  | Архитектор + Аналитик + Моделировщик + Аудитор + Координатор                                                                                                                                                                                                                                                                   | `01_КП/LAUNCH-*.md`                                                                  |
+| 5   | 27.06 | Methodology v2                                           | 3 случая `ask_user` + 4 UX-принципа PO + Pre/Post-action checklist                                                                                                                                                                                                                                                             | `AGENT-METHOD.md` §5.3-§5.6, [PSL-008..009](PROJECT-STATE-LOG.md)                    |
+| 6   | 27.06 | ТЗ-006 выполнено                                         | scoring 1-5 для 53 артефактов + шаблон СПОРА → методология финализирована                                                                                                                                                                                                                                                      | `99_Справочники/СПОРНЫЕ-МОМЕНТЫ.md`, [PSL-018](PROJECT-STATE-LOG.md)                 |
+| 7   | 27.06 | 5 модулей декомпозированы                                | 16 + 20 + 20 + 19 STUB файлов для Договор/Производство/Склад/Финансы (КП уже в PSL-004)                                                                                                                                                                                                                                        | [PSL-021..024](PROJECT-STATE-LOG.md)                                                 |
+| 8   | 27.06 | Run 4/5 Склад + Run 5/5 Финансы + cross-module hardening | ТЗ-013 (FINALIZED) + ТЗ-014 (FINALIZED) + LAUNCH-ANALYST-SKLAD + LAUNCH-ANALYST-FINANSY (TERMINUS, pre-flight guard) + canonical naming drift-fix (PSL-041): CHAIN-КЛАД→СКЛ, CHAIN-ФИНАНСЫ→ФИН, fabricated PURCHASE/SHIPMENT→СКЛ, ORDER→ФИН, PAYMENT→PAY. Pipeline v6 Tier-DAG Run N/5 fully ready (1..4 closed + 5 TERMINUS). | [PSL-036..041](PROJECT-STATE-LOG.md)                                                 |
 
 **Полный audit trail (26 записей PSL-001..026):** [`PROJECT-STATE-LOG.md`](PROJECT-STATE-LOG.md).
 
@@ -73,24 +74,27 @@
 
 **10 ТЗ + 1 надзорное готовы к запуску / в работе. 7 distinct roles задействовано.**
 
-| Тип | Что | Где | Готов? |
-|---|---|---|---|
-| **Аналитик (Reg-1)** | REGISTRY-OF-RULES.md (~715 строк / 577 правил) | ТЗ-001 (⚠️ CLOSED-WITH-CAVEATS 75%) | ✅ done |
-| **Аналитик (Run 1/5 КП)** | 3 STUB КП: 61 RBAC + 40 INV + state machine | ТЗ-002 | ✅ done (100%) |
-| **UX-дизайнер** | LAUNCH-UX Karkas-Kit (742 строк / 25 компонентов + 10 hot-keys) | ТЗ-003 | ✅ done (100%) |
-| **Моделировщик** | Phase 1 Bootstrap Prisma (3 миграции A/E/F + Husky + 407 Vitest) | ТЗ-004 | ✅ READY (closure 8/8 passed; deploy gate pending `pnpm install` + `prisma migrate dev` в свежем env) |
-| **Методолог** | DECISION-METHODOLOGY.md (портируемый 5-фазный алгоритм) | ТЗ-005 | ⚠️ SPEC created (cross-ref via ТЗ-006; standalone closure-report отсутствует — требует verification) |
-| **Архитектор ×3** | Декомпозиция Производство / Склад / Финансы (20 + 20 + 19 STUB) | ТЗ-007/008/009 | ✅ done (×3) (все 3: 8/8 + 7/7 + 7/7) |
-| **Техписатель (utility)** | USER-JOURNEYS +12 / FLOW-MAP +3 Mermaid / GLOSSARY +10 | ТЗ-010A/B/C | ⚠️ done с hard-limit override: USER-JOURNEYS 678/500, FLOW-MAP 616/300, GLOSSARY audit log 148/80 (per PSL-026 precedent для master-файлов) |
-| **Аудитор (надзор)** | ТЗП-001: 12 static + 7 semantic = 19 проверок | ТЗП-001 + аудитор-fix агенты | ✅ done (⚠️ PASS-WITH-WARNINGS 75%, gaps 3/5 fixed) |
-| **Закрытие Универсал** | ТЗ-0000 Universal Closure Protocol (6 фаз) | ТЗ-0000 | ✅ done (применён ко всем CLOSURE-REPORT) |
-| **Run 2/5 Аналитик Договор** | ТЗ-011: 4 STUB (RBAC + правила + статусы + переходы) — mirror proven ТЗ-002 + 4 additions (КП-compatibility + BUSINESS-VISION + perehody-4th + guardrail) | ТЗ-011 | 📋 ready (запуск параллельным Аналитик-агентом) |
-| **Полный audit / консолидация** | MASTER-VISION.md + CHECKLIST.md v1.4 + консолидация в 3 masters + ТЗ-011 spec (Run 2/5) | PSL-026 + PSL-031 + PSL-032 | ✅ done (ТЗ-011 ready к запуску) |
-| **Run 3/5 Аналитик Производство** | ТЗ-012: 4 STUB (RBAC + правила + статусы + переходы) — mirror ТЗ-011 + §0.5 Schema Constraints Note (**Option C Hybrid**: 4 schema enums + 8 business statuses computed via `isActive`/`plannedStart`/`actualStart`/`quantityActual`) + 5 additions (Task sub-state-machine `task_CREATED/task_PLANNED/task_INWORK/task_PARTIALLY/task_DONE`, **4-module cross-link КП+Договор+Склад+Финансы**, Auto-IN ЗК Completed → Склад, Auto-Refund ЗК Cancelled → Финансы per СПОР-12, CHAIN-ДОГ hard-link mirror) | ТЗ-012 + LAUNCH-ANALYST-PROIZVODSTVO (TBD) | 📋 ready (Run 3 = **pivot**, downstream Run 4/5 Склад + Run 5/5 Финансы в parallel branches) |
+| Тип                                     | Что                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       | Где                                                                                                                 | Готов?                                                                                                                                      |
+| --------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Аналитик (Reg-1)**                    | REGISTRY-OF-RULES.md (~715 строк / 577 правил)                                                                                                                                                                                                                                                                                                                                                                                                                                                            | ТЗ-001 (⚠️ CLOSED-WITH-CAVEATS 75%)                                                                                 | ✅ done                                                                                                                                     |
+| **Аналитик (Run 1/5 КП)**               | 3 STUB КП: 61 RBAC + 40 INV + state machine                                                                                                                                                                                                                                                                                                                                                                                                                                                               | ТЗ-002                                                                                                              | ✅ done (100%)                                                                                                                              |
+| **UX-дизайнер**                         | LAUNCH-UX Karkas-Kit (742 строк / 25 компонентов + 10 hot-keys)                                                                                                                                                                                                                                                                                                                                                                                                                                           | ТЗ-003                                                                                                              | ✅ done (100%)                                                                                                                              |
+| **Моделировщик**                        | Phase 1 Bootstrap Prisma (3 миграции A/E/F + Husky + 407 Vitest)                                                                                                                                                                                                                                                                                                                                                                                                                                          | ТЗ-004                                                                                                              | ✅ READY (closure 8/8 passed; deploy gate pending `pnpm install` + `prisma migrate dev` в свежем env)                                       |
+| **Методолог**                           | DECISION-METHODOLOGY.md (портируемый 5-фазный алгоритм)                                                                                                                                                                                                                                                                                                                                                                                                                                                   | ТЗ-005                                                                                                              | ⚠️ SPEC created (cross-ref via ТЗ-006; standalone closure-report отсутствует — требует verification)                                        |
+| **Архитектор ×3**                       | Декомпозиция Производство / Склад / Финансы (20 + 20 + 19 STUB)                                                                                                                                                                                                                                                                                                                                                                                                                                           | ТЗ-007/008/009                                                                                                      | ✅ done (×3) (все 3: 8/8 + 7/7 + 7/7)                                                                                                       |
+| **Техписатель (utility)**               | USER-JOURNEYS +12 / FLOW-MAP +3 Mermaid / GLOSSARY +10                                                                                                                                                                                                                                                                                                                                                                                                                                                    | ТЗ-010A/B/C                                                                                                         | ⚠️ done с hard-limit override: USER-JOURNEYS 678/500, FLOW-MAP 616/300, GLOSSARY audit log 148/80 (per PSL-026 precedent для master-файлов) |
+| **Аудитор (надзор)**                    | ТЗП-001: 12 static + 7 semantic = 19 проверок                                                                                                                                                                                                                                                                                                                                                                                                                                                             | ТЗП-001 + аудитор-fix агенты                                                                                        | ✅ done (⚠️ PASS-WITH-WARNINGS 75%, gaps 3/5 fixed)                                                                                         |
+| **Закрытие Универсал**                  | ТЗ-0000 Universal Closure Protocol (6 фаз)                                                                                                                                                                                                                                                                                                                                                                                                                                                                | ТЗ-0000                                                                                                             | ✅ done (применён ко всем CLOSURE-REPORT)                                                                                                   |
+| **Run 2/5 Аналитик Договор**            | ТЗ-011: 4 STUB (RBAC + правила + статусы + переходы) — mirror proven ТЗ-002 + 4 additions (КП-compatibility + BUSINESS-VISION + perehody-4th + guardrail)                                                                                                                                                                                                                                                                                                                                                 | ТЗ-011                                                                                                              | 📋 ready (запуск параллельным Аналитик-агентом)                                                                                             |
+| **Полный audit / консолидация**         | MASTER-VISION.md + CHECKLIST.md v1.4 + консолидация в 3 masters + ТЗ-011 spec (Run 2/5)                                                                                                                                                                                                                                                                                                                                                                                                                   | PSL-026 + PSL-031 + PSL-032                                                                                         | ✅ done (ТЗ-011 ready к запуску)                                                                                                            |
+| **Run 3/5 Аналитик Производство**       | ТЗ-012: 4 STUB (RBAC + правила + статусы + переходы) — mirror ТЗ-011 + §0.5 Schema Constraints Note (**Option C Hybrid**: 4 schema enums + 8 business statuses computed via `isActive`/`plannedStart`/`actualStart`/`quantityActual`) + 5 additions (Task sub-state-machine `task_CREATED/task_PLANNED/task_INWORK/task_PARTIALLY/task_DONE`, **4-module cross-link КП+Договор+Склад+Финансы**, Auto-IN ЗК Completed → Склад, Auto-Refund ЗК Cancelled → Финансы per СПОР-12, CHAIN-ДОГ hard-link mirror) | ТЗ-012 + LAUNCH-ANALYST-PROIZVODSTVO (TBD)                                                                          | 📋 ready (Run 3 = **pivot**, downstream Run 4/5 Склад + Run 5/5 Финансы в parallel branches                                                 |
+| **Run 4/5 Аналитик Склад**              | ТЗ-013: 4 STUB (RBAC + правила + NEW 04-statusy + NEW 04-perehody в ) — mirror ТЗ-012 + 5 additions (Immutable StockMovement, runtime availableQty, NOT-MRP ЗК.COMPLETED триггер, Shipment.delivered→OrderClosing link, разрешённый low-stock trigger). 4 CHAIN hard-links (КП/ДОГ/ПРД upstream + ФИН downstream future reference).                                                                                                                                                                       | ТЗ-013 + (NEW, ready, code-reviewer CRITICAL #1+#2 fixes applied)                                                   | 📋 ready (downstream Финансы depends on Run 4/5 ✅ closed)                                                                                  |
+| **Run 5/5 Аналитик Финансы (TERMINUS)** | ТЗ-014: 4 STUB (RBAC + правила + NEW 05-statusy + NEW 05-perehody в ) — mirror ТЗ-013 + 5 Финансы-specific additions (Storno≠Refund per СПОР-15, MARGIN=null per СПОР-1, MANUAL Invoice per СПОР-7, Auto-Order+Auto-Refund триггеры). 4 upstream hard-link only, NO downstream.                                                                                                                                                                                                                           | ТЗ-014 + (NEW, ready, TERMINUS, code-reviewer CRITICAL #1+#3 fixes applied including pre-flight prerequisite check) | 📋 ready (✅ closed → **Phase 1 Bootstrap deploy разблокирован полностью**)                                                                 | )   |
 
 **БЛОКИРУЮЩИЙ РЕЗУЛЬТАТ:** Phase 1 Bootstrap Prisma + Phase 2 Mantine UI **РАЗБЛОКИРОВАНЫ** (per AUDITOR PASS-WITH-WARNINGS + INTEGRATION-PLAN §6.3). ТЗ-004 deliverеd `prisma/schema.prisma` с verified Comment + packageTag (976 строк verified via grep). ТЗ-002 deliverеd RBAC-middleware готов к Phase 2.
 
 **Где смотреть прямо сейчас:**
+
 - **Для PO:** этот файл (ты здесь).
 - **Для каждой роли:** LAUNCH-X.md пакеты в `01_КП/LAUNCH-*.md` (5 готовых пакетов).
 - **Аудит целостности:** `99_Справочники/INTEGRATION-PLAN.md` (Tier-DAG + 7 конфликтов + 6 failure modes).
@@ -110,11 +114,11 @@
 
 **Детально:**
 
-| Фаза | Что | Результат | Эта | Блокер |
-|---|---|---|---|---|
-| **Phase 1: Bootstrap Prisma** | 3 миграции (ContractItem nullable, packageTag, Comment) + Husky + 88 Vitest baseline | Репа `kppdf-6.0` готова к Phase 2 | 4-8 ч (параллельные ТЗ) | ✅ PASS от AUDITOR (ТЗП-001) |
-| **Phase 2: Mantine UI + RBAC** | 3-зонный конструктор КП, 5 страниц Склада, API Routes + Zod | Все 5 модулей рендерятся с RBAC | 1-2 недели | Phase 1 финал + REGISTRY ✅ |
-| **Phase 3: Production deploy** | Production env (Synology DSM), migrate apply, manager onboarding | Live CRM в production | 1 неделя | Phase 2 финал |
+| Фаза                           | Что                                                                                  | Результат                         | Эта                     | Блокер                       |
+| ------------------------------ | ------------------------------------------------------------------------------------ | --------------------------------- | ----------------------- | ---------------------------- |
+| **Phase 1: Bootstrap Prisma**  | 3 миграции (ContractItem nullable, packageTag, Comment) + Husky + 88 Vitest baseline | Репа `kppdf-6.0` готова к Phase 2 | 4-8 ч (параллельные ТЗ) | ✅ PASS от AUDITOR (ТЗП-001) |
+| **Phase 2: Mantine UI + RBAC** | 3-зонный конструктор КП, 5 страниц Склада, API Routes + Zod                          | Все 5 модулей рендерятся с RBAC   | 1-2 недели              | Phase 1 финал + REGISTRY ✅  |
+| **Phase 3: Production deploy** | Production env (Synology DSM), migrate apply, manager onboarding                     | Live CRM в production             | 1 неделя                | Phase 2 финал                |
 
 **Текущий точный статус:** Phase 1 Bootstrap в работе (10 параллельных ТЗ закрывают Reg-1 + Run 1/5 + декомпозиции 4 модулей + utility-docs consolidation + methodology fit). Следующая крупная работа = Phase 1 Bootstrap код после ✅ PASS AUDIT-REPORT.
 
@@ -122,18 +126,18 @@
 
 ## 6. 📁 ТОП-10 ДОКУМЕНТОВ (обязательно хотя бы просмотреть)
 
-| # | Документ | Роль | Когда открывать |
-|---|---|---|---|
-| 1 | [`README.md`](README.md) | Корень — карта проекта | Первый файл |
-| 2 | [`MASTER-VISION.md`](MASTER-VISION.md) | **Master для PO** (vision/mission/roadmap/exclusions) | Хочешь понять проект как целое |
-| 3 | [`99_Справочники/BUSINESS-VISION.md`](99_Справочники/BUSINESS-VISION.md) | **Strategic Anchor** (single-tenant / ≤10 / полуавтомат / anti-features / 6 UX-принципов) | Перед ЛЮБЫМ новым решением |
-| 4 | [`BIG-BOOK.md`](BIG-BOOK.md) | Tech-консолидатор (12 разделов) | Если нужно быстро понять архитектуру/стек |
-| 5 | [`CHECKLIST.md`](CHECKLIST.md) | AI-навигатор (≤400 строк) | Если ты ИИ-агент |
-| 6 | [`AGENT-ENTRYPOINT.md`](AGENT-ENTRYPOINT.md) | Точка входа для ИИ | Если запускаешь агента |
-| 7 | [`PROJECT-STATE-LOG.md`](PROJECT-STATE-LOG.md) | 26 PSL-записей audit trail | Если хочешь понять «куда ветер дует» |
-| 8 | [`99_Справочники/SCHEMA-CONSOLIDATED.md`](99_Справочники/SCHEMA-CONSOLIDATED.md) | Единая схема БД (32 сущности + 22 enum) | Если пишешь Prisma / API |
-| 9 | [`99_Справочники/OPEN-QUESTIONS-MASTER.md`](99_Справочники/OPEN-QUESTIONS-MASTER.md) | 38 Q (все ✅ ПРИНЯТО) | Если нужно понять «почему так решили» |
-| 10 | [`99_Справочники/INTEGRATION-PLAN.md`](99_Справочники/INTEGRATION-PLAN.md) | Tier-DAG 5 фаз + 7 конфликтов | Если интересуешься порядком применения результатов ТЗ |
+| #   | Документ                                                                             | Роль                                                                                      | Когда открывать                                       |
+| --- | ------------------------------------------------------------------------------------ | ----------------------------------------------------------------------------------------- | ----------------------------------------------------- |
+| 1   | [`README.md`](README.md)                                                             | Корень — карта проекта                                                                    | Первый файл                                           |
+| 2   | [`MASTER-VISION.md`](MASTER-VISION.md)                                               | **Master для PO** (vision/mission/roadmap/exclusions)                                     | Хочешь понять проект как целое                        |
+| 3   | [`99_Справочники/BUSINESS-VISION.md`](99_Справочники/BUSINESS-VISION.md)             | **Strategic Anchor** (single-tenant / ≤10 / полуавтомат / anti-features / 6 UX-принципов) | Перед ЛЮБЫМ новым решением                            |
+| 4   | [`BIG-BOOK.md`](BIG-BOOK.md)                                                         | Tech-консолидатор (12 разделов)                                                           | Если нужно быстро понять архитектуру/стек             |
+| 5   | [`CHECKLIST.md`](CHECKLIST.md)                                                       | AI-навигатор (≤400 строк)                                                                 | Если ты ИИ-агент                                      |
+| 6   | [`AGENT-ENTRYPOINT.md`](AGENT-ENTRYPOINT.md)                                         | Точка входа для ИИ                                                                        | Если запускаешь агента                                |
+| 7   | [`PROJECT-STATE-LOG.md`](PROJECT-STATE-LOG.md)                                       | 26 PSL-записей audit trail                                                                | Если хочешь понять «куда ветер дует»                  |
+| 8   | [`99_Справочники/SCHEMA-CONSOLIDATED.md`](99_Справочники/SCHEMA-CONSOLIDATED.md)     | Единая схема БД (32 сущности + 22 enum)                                                   | Если пишешь Prisma / API                              |
+| 9   | [`99_Справочники/OPEN-QUESTIONS-MASTER.md`](99_Справочники/OPEN-QUESTIONS-MASTER.md) | 38 Q (все ✅ ПРИНЯТО)                                                                     | Если нужно понять «почему так решили»                 |
+| 10  | [`99_Справочники/INTEGRATION-PLAN.md`](99_Справочники/INTEGRATION-PLAN.md)           | Tier-DAG 5 фаз + 7 конфликтов                                                             | Если интересуешься порядком применения результатов ТЗ |
 
 **Все остальные файлы** — `99_Справочники/` (15 файлов) + `0X_*` модули (~80 документов после декомпозиции). Открываются по конкретной задаче.
 
@@ -143,19 +147,19 @@
 
 > **Главное правило Буфера сейчас (~27.06.2026):** пока агенты работают параллельно, **не трогать** файлы в этих зонах, чтобы не сломать их работу. После возврата агента — Буфер интегрирует результат.
 
-| Зона | Что внутри | Почему нельзя трогать |
-|---|---|---|
-| `99_Справочники/REGISTRY-OF-RULES.md` | Каталог 577 правил (ТЗ-001 result) | Только REGISTRY-agent пишет. Финализирован через 🔒 FINALIZED |
-| `99_Справочники/TASKS/01-LOG.md` + `02-REPORT.md` | Рабочие логи ТЗ-001 (CLOSURE-WITH-CAVEATS) | Только методолог / координатор touchит |
-| `99_Справочники/TASKS/03-*.md` | Рабочие логи ТЗ-003 (LAUNCH-UX) | UX-агент пишет || `99_Справочники/DECISION-METHODOLOGY.md` | Портируемый алгоритм (ТЗ-005, может быть создан в любой момент) | Только методолог touch ит после создания |
-| `01_КП/01-shablon/01-konstruktor.md` + `01-primery.md` | Шаблоны КП (Run 2 Аналитик пишет) | Аналитик Run 1/5 пишет (ТЗ-002) |
-| `01_КП/02-konstruktor-kp/*` (5 файлов) | Конструктор КП + таблица + смена юрлица + автосохранение + кнопки | Аналитик Run 2 пишет |
-| `01_КП/03-zhiznennyj-cikl/03-statusy.md` + `03-perehody.md` | Статусы КП + переходы | Аналитик Run 1/5 пишет |
-| `01_КП/04-pravila/04-rbac.md` + `04-biznes-pravila.md` | RBAC + бизнес-правила КП | Аналитик Run 1/5 пишет |
-| `02_Договор/04-pravila/*` + `03-zhiznennyj-cikl/03-perehody.md` | Правила Договор (будущая зона Run 2, после ТЗ-002) | Договор-Аналитик будет писать (после Run 1/5 КП) |
-| `03_Производство/*` | Все 20 STUB будут заполняться Run 3 | Архитектор ТЗ-007 пишет, потом Производство-Аналитик |
-| `04_Склад/*` (2 МОДУЛЬ-дока) + будущие STUB | Все 20 STUB будут заполняться Run 4 | Архитектор ТЗ-008 пишет, потом Склад-Аналитик |
-| `05_Финансы/*` (1 МОДУЛЬ-док) + будущие STUB | Все 19 STUB будут заполняться Run 5 | Архитектор ТЗ-009 пишет, потом Финансы-Аналитик |
+| Зона                                                            | Что внутри                                                        | Почему нельзя трогать                                         |
+| --------------------------------------------------------------- | ----------------------------------------------------------------- | ------------------------------------------------------------- |
+| `99_Справочники/REGISTRY-OF-RULES.md`                           | Каталог 577 правил (ТЗ-001 result)                                | Только REGISTRY-agent пишет. Финализирован через 🔒 FINALIZED |
+| `99_Справочники/TASKS/01-LOG.md` + `02-REPORT.md`               | Рабочие логи ТЗ-001 (CLOSURE-WITH-CAVEATS)                        | Только методолог / координатор touchит                        |
+| `99_Справочники/TASKS/03-*.md`                                  | Рабочие логи ТЗ-003 (LAUNCH-UX)                                   | UX-агент пишет                                                |     | `99_Справочники/DECISION-METHODOLOGY.md` | Портируемый алгоритм (ТЗ-005, может быть создан в любой момент) | Только методолог touch ит после создания |
+| `01_КП/01-shablon/01-konstruktor.md` + `01-primery.md`          | Шаблоны КП (Run 2 Аналитик пишет)                                 | Аналитик Run 1/5 пишет (ТЗ-002)                               |
+| `01_КП/02-konstruktor-kp/*` (5 файлов)                          | Конструктор КП + таблица + смена юрлица + автосохранение + кнопки | Аналитик Run 2 пишет                                          |
+| `01_КП/03-zhiznennyj-cikl/03-statusy.md` + `03-perehody.md`     | Статусы КП + переходы                                             | Аналитик Run 1/5 пишет                                        |
+| `01_КП/04-pravila/04-rbac.md` + `04-biznes-pravila.md`          | RBAC + бизнес-правила КП                                          | Аналитик Run 1/5 пишет                                        |
+| `02_Договор/04-pravila/*` + `03-zhiznennyj-cikl/03-perehody.md` | Правила Договор (будущая зона Run 2, после ТЗ-002)                | Договор-Аналитик будет писать (после Run 1/5 КП)              |
+| `03_Производство/*`                                             | Все 20 STUB будут заполняться Run 3                               | Архитектор ТЗ-007 пишет, потом Производство-Аналитик          |
+| `04_Склад/*` (2 МОДУЛЬ-дока) + будущие STUB                     | Все 20 STUB будут заполняться Run 4                               | Архитектор ТЗ-008 пишет, потом Склад-Аналитик                 |
+| `05_Финансы/*` (1 МОДУЛЬ-док) + будущие STUB                    | Все 19 STUB будут заполняться Run 5                               | Архитектор ТЗ-009 пишет, потом Финансы-Аналитик               |
 
 **Буфер (стратег-ассистент) ЗАНИМАЕТСЯ только:** master-навигаторами (этот файл + CHECKLIST.md + BIG-BOOK.md + PROJECT-STATE-LOG.md + README.md), `99_Справочники/TASKS/ТЗ-*.md` (создание новых), `99_Справочники/MODULE-DECOMPOSITION-PLAN.md`, `99_Справочники/INTEGRATION-PLAN.md`. **Не правит** содержимое STUB-ов в `0X_*` модулях.
 
@@ -163,8 +167,10 @@
 
 ## 8. Версия и история
 
-| Версия | Дата | Что |
-|---|---|---|
-| 1.0 | 2026-06-27 | **СОЗДАН** как финальный master для PO (vision/mission/completed/in-progress/roadmap/exclusions). Содержит: VISION (1 параграф), MISSION (5 модулей матрица), ВЫПОЛНЕНО (7 вех), В РАБОТЕ ПАРАЛЛЕЛЬНО (10 ТЗ+ТЗП+ЗАКРЫТИЕ fix), КУДА ДВИГАЕМСЯ (3 фазы roadmap), ТОП-10 ДОКУМЕНТОВ, exclusion list (все working zones агентов), История. Hard limit ≤350 строк target соблюдён. Взаимные cross-refs с CHECKLIST.md (AI), BIG-BOOK.md (tech). |
+| Версия | Дата       | Что                                                                                                                                                                                                                                                                                                                                                                                                                                          |
+| ------ | ---------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1.0    | 2026-06-27 | **СОЗДАН** как финальный master для PO (vision/mission/completed/in-progress/roadmap/exclusions). Содержит: VISION (1 параграф), MISSION (5 модулей матрица), ВЫПОЛНЕНО (7 вех), В РАБОТЕ ПАРАЛЛЕЛЬНО (10 ТЗ+ТЗП+ЗАКРЫТИЕ fix), КУДА ДВИГАЕМСЯ (3 фазы roadmap), ТОП-10 ДОКУМЕНТОВ, exclusion list (все working zones агентов), История. Hard limit ≤350 строк target соблюдён. Взаимные cross-refs с CHECKLIST.md (AI), BIG-BOOK.md (tech). |
 
 > **PSA:** Этот файл = дублирование с CHECKLIST.md §12 «Заметки Архистратора» по духу, но explicit для PO (визуальный, vision-first). CHECKLIST остаётся узким AI-навигатором. BIG-BOOK — техконсолидатор. Три master-файла = три аудитории: **PO / AI / Tech-разработчик**.
+
+| 11 | [](99_Справочники/ID-ALIAS-MAP.md) | **ID Alias Table** (8 алиасов в CHAIN-prefix, payment, cross-module) per PSL-043 (Hybrid marker approach) | При обратном поиске ID между Runами AKA при hard-link resolution |
