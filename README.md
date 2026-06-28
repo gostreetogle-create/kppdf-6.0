@@ -38,9 +38,11 @@
 # 2a. Скопировать шаблон env из репозитория
 cp .env.example .env
 
-# 2b. Сгенерировать JWT_SECRET (64-char hex)
-# Меняет одну строку в .env — DATABASE_URL остаётся из шаблона
-sed -i "s|JWT_SECRET=.*|JWT_SECRET=\"$(openssl rand -hex 32)\"|" .env
+# 2b. Сгенерировать JWT_SECRET (64-char hex) и подставить в .env
+# Безопасно: матчит placeholder из .env.example детерминированно.
+JWT_NEW="$(openssl rand -hex 32)"
+sed -i "s|__generate-with-openssl-rand-hex-32__|${JWT_NEW}|" .env
+unset JWT_NEW
 
 # 2c. Поднять PostgreSQL в Docker
 docker run -d --name kppdf-postgres \
@@ -84,13 +86,9 @@ pnpm dev
 | DB connectivity      | `pnpm db:smoke`               | JSON: organization≥1, user≥1, ...             |
 | TypeScript clean     | `pnpm tsc --noEmit`           | (0 errors)                                    |
 | Unit tests           | `pnpm test`                   | 407/407 ✅                                    |
-| Dev boots            | `pnpm dev` → `curl -sI :3000` | HTTP/1.1 307 → `/login?backUrl=%2F`           |
-
-> **Не пропускайте `pnpm db:smoke`** — это Tier-1 CI gate который подтверждает end-to-end что Prisma client видит реальную БД (Playwright-тесты могут молча пройти с замоканной Prisma).
+| Dev boots            | `pnpm dev` → `curl -sI :3000` | HTTP/1.1 307 → `/login?backUrl=%2F`           | > **Не пропускайте `pnpm db:smoke`** — это Tier-1 CI gate который подтверждает end-to-end что Prisma client видит реальную БД (Playwright-тесты могут молча пройти с замоканной Prisma). |
 
 ---
-
-<!-- bootstrap section end -->
 
 ## 📂 Структура проекта
 
