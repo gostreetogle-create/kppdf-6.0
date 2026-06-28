@@ -8,13 +8,15 @@
     "dev:reset": "node scripts/reset-dev.mjs",
     "dev:clean": "bash scripts/start-dev.sh",
     "dev:clean:win": "powershell -ExecutionPolicy Bypass -File scripts/start-dev.ps1",
+    "db:smoke": "tsx scripts/prisma-smoke.ts",
+    "db:validate": "prisma validate && prisma migrate status",
+    "db:migrate-data": "npx tsx scripts/migrate-data.ts",
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
     "lint:css-vars": "bash scripts/check-no-bare-css-vars.sh",
     "test": "vitest run",
-    "test:watch": "vitest",
-    "db:migrate-data": "npx tsx scripts/migrate-data.ts"
+    "test:watch": "vitest"
   },
   "dependencies": {
     "@dnd-kit/core": "^6.3.1",

@@ -9,6 +9,8 @@ export default defineConfig({
     path: "prisma/migrations",
   },
   datasource: {
-    url: process.env.DATABASE_URL || "postgresql://postgres:postgres@localhost:5432/kppdf?sslmode=disable",
+    // Canonical fallback for kppdf-postgres local-dev container (matches .env.example).
+    // Production envs MUST set DATABASE_URL explicitly (no fallback used).
+    url: process.env.DATABASE_URL || "postgresql://kppdf:kppdf123@localhost:5432/kppdf?sslmode=disable",
   },
 });
