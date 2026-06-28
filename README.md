@@ -40,6 +40,7 @@ cp .env.example .env
 
 # 2b. Сгенерировать JWT_SECRET (64-char hex) и подставить в .env
 # Безопасно: матчит placeholder из .env.example детерминированно.
+# NB: требуется GNU sed (есть в Git Bash/WSL/Linux; на чистом macOS — `brew install gnu-sed`).
 JWT_NEW="$(openssl rand -hex 32)"
 sed -i "s|__generate-with-openssl-rand-hex-32__|${JWT_NEW}|" .env
 unset JWT_NEW

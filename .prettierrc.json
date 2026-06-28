@@ -15,12 +15,6 @@
         "printWidth": 100,
         "proseWrap": "preserve"
       }
-    },
-    {
-      "files": "*.yml",
-      "options": {
-        "singleQuote": false
-      }
     }
   ]
 }
