@@ -20,7 +20,7 @@ next-env.d.ts
 # Misc
 coverage/
 playwright-report/
-test-results/)
+test-results/
 
 # Build outputs + IDE files
 dist/
@@ -28,3 +28,9 @@ dist/
 *.bundle.js
 .idea/
 *.swp
+
+# TODO (next session): before first .ts commit, run
+#   pnpm exec prettier --write . && commit as `chore(format): apply defaults`
+# Reason: .prettierrc `printWidth:100` + `trailingComma:"all"` will silently
+# reformat 30+ files on first code touch, polluting git history.
+# See code-reviewer round 2 (commit 9af5648) for full context.
